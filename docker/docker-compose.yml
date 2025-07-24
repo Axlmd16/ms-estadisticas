@@ -1,74 +1,74 @@
 name: SportBoard-container
 
 services:
-  # Base de datos para Kong
-  kong-database:
-    extends:
-      file: ./api-gateway/docker-compose.override.yml
-      service: kong-database
+    # Base de datos para Kong
+    kong-database:
+        extends:
+            file: ./api-gateway/docker-compose.override.yml
+            service: kong-database
 
-  # Migraciones de Kong
-  kong-migrations:
-    extends:
-      file: ./api-gateway/docker-compose.override.yml
-      service: kong-migrations
+    # Migraciones de Kong
+    kong-migrations:
+        extends:
+            file: ./api-gateway/docker-compose.override.yml
+            service: kong-migrations
 
-  # API Gateway Kong
-  kong:
-    extends:
-      file: ./api-gateway/docker-compose.override.yml
-      service: kong
+    # API Gateway Kong
+    kong:
+        extends:
+            file: ./api-gateway/docker-compose.override.yml
+            service: kong
 
-  # Base de datos para ms-auth-service
-  auth-database:
-    image: postgres:15
-    container_name: auth-database
-    restart: always
-    environment:
-      POSTGRES_USER: auth_user
-      POSTGRES_DB: auth_db
-      POSTGRES_PASSWORD: auth_password
-    volumes:
-      - auth-db-data:/var/lib/postgresql/data
-    networks:
-      - sportboard-network
-    ports:
-      - "5433:5432"
+    # Base de datos para ms-auth-service
+    auth-database:
+        image: postgres:15
+        container_name: auth-database
+        restart: always
+        environment:
+            POSTGRES_USER: auth_user
+            POSTGRES_DB: auth_db
+            POSTGRES_PASSWORD: auth_password
+        volumes:
+            - auth-db-data:/var/lib/postgresql/data
+        networks:
+            - sportboard-network
+        ports:
+            - "5433:5432"
 
-  # Microservicio de catálogo#
-  ms-catalog:
-    extends:
-      file: ./backend/ms-catalog/docker-compose.override.yml
-      service: catalogs
+    # Microservicio de catálogo#
+    ms-catalog:
+        extends:
+            file: ./backend/ms-catalog/docker-compose.override.yml
+            service: catalogs
 
-  # Microservicio de autenticación#
-  ms-auth-service:
-    extends:
-      file: ./backend/ms-auth-service/docker-compose.override.yml
-      service: ms-auth-service
-  # Microservicio de competencias
-  ms-competencies:
-    extends:
-      file: ./backend/ms-competencies/docker-compose.override.yml
-      service: ms-competencies
-      
-  # Microservicio de estadisticas
-  ms-statistics:
-    extends:
-      file: ./backend/ms-statistics/docker-compose.override.yml
-      service: ms-statistics
+    # Microservicio de autenticación#
+    ms-auth-service:
+        extends:
+            file: ./backend/ms-auth-service/docker-compose.override.yml
+            service: ms-auth-service
+    # Microservicio de competencias
+    ms-competencies:
+        extends:
+            file: ./backend/ms-competencies/docker-compose.override.yml
+            service: ms-competencies
 
-  # Servicio de base de datos para ms-statistics
-  mongo:
-    extends:
-      file: ./backend/ms-statistics/docker-compose.override.yml
-      service: mongo
+    # Microservicio de estadisticas
+    ms-statistics:
+        extends:
+            file: ./backend/ms-statistics/docker-compose.override.yml
+            service: ms-statistics
 
-  # RabbitMQ para mensajería
-  rabbitmq:
-    extends:
-      file: ./message-broker/docker-compose.override.yml
-      service: rabbitmq
+    # Servicio de base de datos para ms-statistics
+    mongo:
+        extends:
+            file: ./backend/ms-statistics/docker-compose.override.yml
+            service: mongo
+
+    # RabbitMQ para mensajería
+    rabbitmq:
+        extends:
+            file: ./message-broker/docker-compose.override.yml
+            service: rabbitmq
 
 networks:
     sportboard-network:
@@ -76,6 +76,6 @@ networks:
         driver: bridge
 
 volumes:
-  kong-db-data:
-  auth-db-data:
-  mongo_data:
+    kong-db-data:
+    auth-db-data:
+    mongo_data:

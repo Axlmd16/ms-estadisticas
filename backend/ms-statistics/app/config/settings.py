@@ -16,7 +16,6 @@ class Settings(BaseSettings):
     Clase de configuración que carga y valida las variables de entorno necesarias para la aplicación.
     """
     MONGO_URL: str = os.getenv("MONGO_URL")
-    REDIS_URL: str = os.getenv("REDIS_URL")
     JWT_SECRET: str = os.getenv("JWT_SECRET")
     JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM")
     CORS_ORIGINS: str = os.getenv("CORS_ORIGINS")
