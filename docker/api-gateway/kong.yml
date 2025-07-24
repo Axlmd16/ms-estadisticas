@@ -14,8 +14,8 @@ services:
             plugins:
                 - name: request-transformer
                   config:
-                    replace:
-                        uri: /api/v1/catalog/categories/
+                      replace:
+                          uri: /api/v1/catalog/categories/
           - name: ms-catalog-items-route
             paths:
                 - /catalog/items
@@ -25,35 +25,70 @@ services:
             plugins:
                 - name: request-transformer
                   config:
-                    replace:
-                        uri: /api/v1/catalog/items/
+                      replace:
+                          uri: /api/v1/catalog/items/
 
     - name: ms-auth-service
       url: http://ms-auth-service:8011
       routes:
-        - name: ms-auth-route
-          paths:
-            - /auth
-          strip_path: true
-          methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+          - name: ms-auth-route
+            paths:
+                - /auth
+            strip_path: true
+            methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
 
     - name: ms-competencies
       url: http://ms-competencies:8010
       routes:
-        - name: ms-competencies-route
-          paths:
-            - /competencies
-          strip_path: false
-          methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+          - name: ms-competencies-route
+            paths:
+                - /competencies
+            strip_path: false
+            methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
 
     - name: ms-statistics-service
       url: http://ms-statistics:8012
       routes:
-          - name: ms-statistics-route
+          - name: ms-statistics-teams-route
             paths:
-                - /statistics
-            strip_path: false
+                - /statistics/teams
+            strip_path: true
             methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+            plugins:
+                - name: request-transformer
+                  config:
+                      replace:
+                          uri: /api/v1/teams/
+          - name: ms-statistics-seasons-route
+            paths:
+                - /statistics/seasons
+            strip_path: true
+            methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+            plugins:
+                - name: request-transformer
+                  config:
+                      replace:
+                          uri: /api/v1/seasons/
+          - name: ms-statistics-players-route
+            paths:
+                - /statistics/players
+            strip_path: true
+            methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+            plugins:
+                - name: request-transformer
+                  config:
+                      replace:
+                          uri: /api/v1/players/
+          - name: ms-statistics-competitions-route
+            paths:
+                - /statistics/competitions
+            strip_path: true
+            methods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+            plugins:
+                - name: request-transformer
+                  config:
+                      replace:
+                          uri: /api/v1/competitions/
 
 plugins:
     - name: cors
