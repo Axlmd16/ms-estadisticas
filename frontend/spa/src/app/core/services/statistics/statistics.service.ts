@@ -16,6 +16,29 @@ import {
 import { ApiResponse, ApiPaginationResponse } from '../../models/api-response';
 import { API_ENDPOINTS, ApiUrlBuilder } from '../../config/api-endpoints';
 
+// Interfaces para competiciones (no estadísticas)
+export interface Competition {
+    id?: string;
+    _id?: string;
+    name: string;
+    start_date?: Date | string;
+    end_date?: Date | string;
+    id_team?: string[];
+}
+
+export interface CompetitionCreate {
+    name: string;
+    start_date?: Date | string;
+    end_date?: Date | string;
+}
+
+export interface CompetitionUpdate {
+    name?: string;
+    start_date?: Date | string;
+    end_date?: Date | string;
+    id_team?: string[];
+}
+
 /**
  * Servicio para gestionar las estadísticas
  */
@@ -33,6 +56,8 @@ export class StatisticsService {
     private competitionsUrl = ApiUrlBuilder.buildUrl(
         API_ENDPOINTS.STATISTICS.COMPETITIONS
     );
+    // URL para endpoints de competiciones (no estadísticas)
+    private competitionsApiUrl = 'http://localhost:8012/api/v1/competitions';
 
     constructor(private http: HttpClient) {}
 
@@ -382,5 +407,61 @@ export class StatisticsService {
                 ratings
             )
             .pipe(map((response) => response.data));
+    }
+
+    // ==================== COMPETICIONES (CRUD) ====================
+
+    /**
+     * Crea una nueva competición
+     */
+    createCompetition(competition: CompetitionCreate): Observable<Competition> {
+        return this.http
+            .post<Competition>(this.competitionsApiUrl, competition)
+            .pipe(map((response: any) => response));
+    }
+
+    /**
+     * Obtiene todas las competiciones
+     */
+    getAllCompetitions(): Observable<Competition[]> {
+        return this.http.get<Competition[]>(this.competitionsApiUrl);
+    }
+
+    /**
+     * Obtiene una competición por ID
+     */
+    getCompetition(competitionId: string): Observable<Competition> {
+        return this.http.get<Competition>(`${this.competitionsApiUrl}/${competitionId}`);
+    }
+
+    /**
+     * Actualiza una competición
+     */
+    updateCompetition(competitionId: string, competition: CompetitionUpdate): Observable<Competition> {
+        return this.http
+            .put<Competition>(`${this.competitionsApiUrl}/${competitionId}`, competition);
+    }
+
+    /**
+     * Elimina una competición
+     */
+    deleteCompetition(competitionId: string): Observable<void> {
+        return this.http.delete<void>(`${this.competitionsApiUrl}/${competitionId}`);
+    }
+
+    /**
+     * Agrega un equipo a una competición
+     */
+    addTeamToCompetition(competitionId: string, teamId: string): Observable<Competition> {
+        return this.http
+            .post<Competition>(`${this.competitionsApiUrl}/${competitionId}/add_team/${teamId}`, {});
+    }
+
+    /**
+     * Recalcula las estadísticas de una competición
+     */
+    recalculateCompetitionStatistics(competitionId: string): Observable<Competition> {
+        return this.http
+            .post<Competition>(`${this.competitionsApiUrl}/recalculate/${competitionId}`, {});
     }
 }

@@ -195,7 +195,7 @@ export class CompeticionesComponent implements OnInit {
 
     deleteCompetition(comp: StatisticsCompetence) {
         if (confirm('¿Seguro que deseas eliminar esta competición?')) {
-            this.statisticsService.deleteCompetitionStatistics(comp.id).subscribe({
+            this.statisticsService.deleteCompetition(comp.id).subscribe({
                 next: () => {
                     this.loadCompetitions();
                 },
