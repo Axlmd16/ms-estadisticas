@@ -9,3 +9,4 @@ export * from './StatisticsSeason';
 export * from './StatisticsIndividual';
 export * from './StatisticsCompetence';
 export * from './TableRating';
+export * from './statistics-filter.model';
