@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -11,6 +11,7 @@ import {
     StatisticsIndividual,
     StatisticsCompetence,
     TableRating,
+    StatisticsFilter,
 } from '../../models/statistics';
 import { ApiResponse, ApiPaginationResponse } from '../../models/api-response';
 import { API_ENDPOINTS, ApiUrlBuilder } from '../../config/api-endpoints';
@@ -35,10 +36,40 @@ export class StatisticsService {
 
     constructor(private http: HttpClient) {}
 
+    /**
+     * Construye los parámetros HTTP para filtrado y paginación
+     */
+    private buildParams(filter?: StatisticsFilter): HttpParams {
+        let params = new HttpParams();
+
+        if (filter) {
+            if (filter.page)
+                params = params.set('page', filter.page.toString());
+            if (filter.pageSize)
+                params = params.set('page_size', filter.pageSize.toString());
+            if (filter.search) params = params.set('search', filter.search);
+            if (filter.sortBy) params = params.set('sort_by', filter.sortBy);
+            if (filter.sortDirection)
+                params = params.set('sort_direction', filter.sortDirection);
+            if (filter.startDate)
+                params = params.set('start_date', filter.startDate);
+            if (filter.endDate) params = params.set('end_date', filter.endDate);
+            if (filter.teamId) params = params.set('team_id', filter.teamId);
+            if (filter.seasonId)
+                params = params.set('season_id', filter.seasonId);
+            if (filter.playerId)
+                params = params.set('player_id', filter.playerId);
+            if (filter.competitionId)
+                params = params.set('competition_id', filter.competitionId);
+        }
+
+        return params;
+    }
+
     // ==================== EQUIPOS ====================
 
     /**
-     * Obtiene las estadísticas de un equipo
+     * Obtiene las estadísticas de un equipo por ID
      */
     getTeamStatistics(teamId: string): Observable<StatisticsTeam> {
         return this.http
@@ -47,18 +78,66 @@ export class StatisticsService {
     }
 
     /**
-     * Obtiene las estadísticas de todos los equipos
+     * Obtiene las estadísticas de todos los equipos con paginación y filtros
      */
-    getAllTeamsStatistics(): Observable<StatisticsTeam[]> {
+    getAllTeamsStatistics(
+        filter?: StatisticsFilter
+    ): Observable<ApiPaginationResponse<StatisticsTeam>> {
+        return this.http.get<ApiPaginationResponse<StatisticsTeam>>(
+            this.teamsUrl,
+            { params: this.buildParams(filter) }
+        );
+    }
+
+    /**
+     * Crea las estadísticas de un equipo
+     */
+    createTeamStatistics(
+        statistics: StatisticsTeam
+    ): Observable<StatisticsTeam> {
         return this.http
-            .get<ApiResponse<StatisticsTeam[]>>(this.teamsUrl)
+            .post<ApiResponse<StatisticsTeam>>(this.teamsUrl, statistics)
             .pipe(map((response) => response.data));
+    }
+
+    /**
+     * Actualiza las estadísticas de un equipo
+     */
+    updateTeamStatistics(
+        teamId: string,
+        statistics: StatisticsTeam
+    ): Observable<StatisticsTeam> {
+        return this.http
+            .put<ApiResponse<StatisticsTeam>>(
+                `${this.teamsUrl}/${teamId}`,
+                statistics
+            )
+            .pipe(map((response) => response.data));
+    }
+
+    /**
+     * Elimina las estadísticas de un equipo
+     */
+    deleteTeamStatistics(teamId: string): Observable<void> {
+        return this.http.delete<void>(`${this.teamsUrl}/${teamId}`);
+    }
+
+    /**
+     * Busca estadísticas de equipos por criterios
+     */
+    searchTeamStatistics(
+        filter: StatisticsFilter
+    ): Observable<ApiPaginationResponse<StatisticsTeam>> {
+        return this.http.get<ApiPaginationResponse<StatisticsTeam>>(
+            `${this.teamsUrl}/search`,
+            { params: this.buildParams(filter) }
+        );
     }
 
     // ==================== TEMPORADAS ====================
 
     /**
-     * Obtiene las estadísticas de una temporada
+     * Obtiene las estadísticas de una temporada por ID
      */
     getSeasonStatistics(seasonId: string): Observable<StatisticsSeason> {
         return this.http
@@ -69,18 +148,66 @@ export class StatisticsService {
     }
 
     /**
-     * Obtiene las estadísticas de todas las temporadas
+     * Obtiene las estadísticas de todas las temporadas con paginación y filtros
      */
-    getAllSeasonsStatistics(): Observable<StatisticsSeason[]> {
+    getAllSeasonsStatistics(
+        filter?: StatisticsFilter
+    ): Observable<ApiPaginationResponse<StatisticsSeason>> {
+        return this.http.get<ApiPaginationResponse<StatisticsSeason>>(
+            this.seasonsUrl,
+            { params: this.buildParams(filter) }
+        );
+    }
+
+    /**
+     * Crea las estadísticas de una temporada
+     */
+    createSeasonStatistics(
+        statistics: StatisticsSeason
+    ): Observable<StatisticsSeason> {
         return this.http
-            .get<ApiResponse<StatisticsSeason[]>>(this.seasonsUrl)
+            .post<ApiResponse<StatisticsSeason>>(this.seasonsUrl, statistics)
             .pipe(map((response) => response.data));
+    }
+
+    /**
+     * Actualiza las estadísticas de una temporada
+     */
+    updateSeasonStatistics(
+        seasonId: string,
+        statistics: StatisticsSeason
+    ): Observable<StatisticsSeason> {
+        return this.http
+            .put<ApiResponse<StatisticsSeason>>(
+                `${this.seasonsUrl}/${seasonId}`,
+                statistics
+            )
+            .pipe(map((response) => response.data));
+    }
+
+    /**
+     * Elimina las estadísticas de una temporada
+     */
+    deleteSeasonStatistics(seasonId: string): Observable<void> {
+        return this.http.delete<void>(`${this.seasonsUrl}/${seasonId}`);
+    }
+
+    /**
+     * Busca estadísticas de temporadas por criterios
+     */
+    searchSeasonStatistics(
+        filter: StatisticsFilter
+    ): Observable<ApiPaginationResponse<StatisticsSeason>> {
+        return this.http.get<ApiPaginationResponse<StatisticsSeason>>(
+            `${this.seasonsUrl}/search`,
+            { params: this.buildParams(filter) }
+        );
     }
 
     // ==================== INDIVIDUALES ====================
 
     /**
-     * Obtiene las estadísticas individuales de un jugador
+     * Obtiene las estadísticas individuales de un jugador por ID
      */
     getPlayerStatistics(playerId: string): Observable<StatisticsIndividual> {
         return this.http
@@ -91,18 +218,69 @@ export class StatisticsService {
     }
 
     /**
-     * Obtiene las estadísticas de todos los jugadores
+     * Obtiene las estadísticas de todos los jugadores con paginación y filtros
      */
-    getAllPlayersStatistics(): Observable<StatisticsIndividual[]> {
+    getAllPlayersStatistics(
+        filter?: StatisticsFilter
+    ): Observable<ApiPaginationResponse<StatisticsIndividual>> {
+        return this.http.get<ApiPaginationResponse<StatisticsIndividual>>(
+            this.playersUrl,
+            { params: this.buildParams(filter) }
+        );
+    }
+
+    /**
+     * Crea las estadísticas de un jugador
+     */
+    createPlayerStatistics(
+        statistics: StatisticsIndividual
+    ): Observable<StatisticsIndividual> {
         return this.http
-            .get<ApiResponse<StatisticsIndividual[]>>(this.playersUrl)
+            .post<ApiResponse<StatisticsIndividual>>(
+                this.playersUrl,
+                statistics
+            )
             .pipe(map((response) => response.data));
+    }
+
+    /**
+     * Actualiza las estadísticas de un jugador
+     */
+    updatePlayerStatistics(
+        playerId: string,
+        statistics: StatisticsIndividual
+    ): Observable<StatisticsIndividual> {
+        return this.http
+            .put<ApiResponse<StatisticsIndividual>>(
+                `${this.playersUrl}/${playerId}`,
+                statistics
+            )
+            .pipe(map((response) => response.data));
+    }
+
+    /**
+     * Elimina las estadísticas de un jugador
+     */
+    deletePlayerStatistics(playerId: string): Observable<void> {
+        return this.http.delete<void>(`${this.playersUrl}/${playerId}`);
+    }
+
+    /**
+     * Busca estadísticas de jugadores por criterios
+     */
+    searchPlayerStatistics(
+        filter: StatisticsFilter
+    ): Observable<ApiPaginationResponse<StatisticsIndividual>> {
+        return this.http.get<ApiPaginationResponse<StatisticsIndividual>>(
+            `${this.playersUrl}/search`,
+            { params: this.buildParams(filter) }
+        );
     }
 
     // ==================== COMPETENCIAS ====================
 
     /**
-     * Obtiene las estadísticas de una competencia
+     * Obtiene las estadísticas de una competencia por ID
      */
     getCompetitionStatistics(
         competitionId: string
@@ -115,23 +293,93 @@ export class StatisticsService {
     }
 
     /**
-     * Obtiene las estadísticas de todas las competencias
+     * Obtiene las estadísticas de todas las competencias con paginación y filtros
      */
-    getAllCompetitionsStatistics(): Observable<StatisticsCompetence[]> {
+    getAllCompetitionsStatistics(
+        filter?: StatisticsFilter
+    ): Observable<ApiPaginationResponse<StatisticsCompetence>> {
+        return this.http.get<ApiPaginationResponse<StatisticsCompetence>>(
+            this.competitionsUrl,
+            { params: this.buildParams(filter) }
+        );
+    }
+
+    /**
+     * Crea las estadísticas de una competencia
+     */
+    createCompetitionStatistics(
+        statistics: StatisticsCompetence
+    ): Observable<StatisticsCompetence> {
         return this.http
-            .get<ApiResponse<StatisticsCompetence[]>>(this.competitionsUrl)
+            .post<ApiResponse<StatisticsCompetence>>(
+                this.competitionsUrl,
+                statistics
+            )
             .pipe(map((response) => response.data));
+    }
+
+    /**
+     * Actualiza las estadísticas de una competencia
+     */
+    updateCompetitionStatistics(
+        competitionId: string,
+        statistics: StatisticsCompetence
+    ): Observable<StatisticsCompetence> {
+        return this.http
+            .put<ApiResponse<StatisticsCompetence>>(
+                `${this.competitionsUrl}/${competitionId}`,
+                statistics
+            )
+            .pipe(map((response) => response.data));
+    }
+
+    /**
+     * Elimina las estadísticas de una competencia
+     */
+    deleteCompetitionStatistics(competitionId: string): Observable<void> {
+        return this.http.delete<void>(
+            `${this.competitionsUrl}/${competitionId}`
+        );
+    }
+
+    /**
+     * Busca estadísticas de competencias por criterios
+     */
+    searchCompetitionStatistics(
+        filter: StatisticsFilter
+    ): Observable<ApiPaginationResponse<StatisticsCompetence>> {
+        return this.http.get<ApiPaginationResponse<StatisticsCompetence>>(
+            `${this.competitionsUrl}/search`,
+            { params: this.buildParams(filter) }
+        );
     }
 
     // ==================== TABLA DE POSICIONES ====================
 
     /**
-     * Obtiene la tabla de posiciones de una competencia
+     * Obtiene la tabla de posiciones de una competencia con paginación y filtros opcionales
      */
-    getTableRating(competitionId: string): Observable<TableRating[]> {
+    getTableRating(
+        competitionId: string,
+        filter?: StatisticsFilter
+    ): Observable<ApiPaginationResponse<TableRating>> {
+        return this.http.get<ApiPaginationResponse<TableRating>>(
+            `${this.competitionsUrl}/${competitionId}/table`,
+            { params: this.buildParams(filter) }
+        );
+    }
+
+    /**
+     * Actualiza la tabla de posiciones de una competencia
+     */
+    updateTableRating(
+        competitionId: string,
+        ratings: TableRating[]
+    ): Observable<TableRating[]> {
         return this.http
-            .get<ApiResponse<TableRating[]>>(
-                `${this.competitionsUrl}/${competitionId}/table`
+            .put<ApiResponse<TableRating[]>>(
+                `${this.competitionsUrl}/${competitionId}/table`,
+                ratings
             )
             .pipe(map((response) => response.data));
     }
