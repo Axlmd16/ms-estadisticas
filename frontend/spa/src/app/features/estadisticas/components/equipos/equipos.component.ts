@@ -10,6 +10,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 
 import { StatisticsService } from '../../../../core/services/statistics/statistics.service';
@@ -18,6 +20,7 @@ import {
     StatisticsFilter,
 } from '../../../../core/models/statistics';
 import { ApiPaginationResponse } from '../../../../core/models/api-response';
+import { EquipoFormComponent } from './equipo-form/equipo-form.component';
 
 @Component({
     selector: 'app-equipos',
@@ -66,15 +69,25 @@ import { ApiPaginationResponse } from '../../../../core/models/api-response';
                             <mat-icon matSuffix>search</mat-icon>
                         </mat-form-field>
 
-                        <!-- Botón para exportar -->
-                        <button
-                            mat-raised-button
-                            color="primary"
-                            class="export-btn"
-                        >
-                            <mat-icon>download</mat-icon>
-                            Exportar Datos
-                        </button>
+                        <!-- Botones de acción -->
+                        <div class="d-flex gap-2">
+                            <button
+                                mat-raised-button
+                                color="primary"
+                                (click)="createEquipo()"
+                            >
+                                <mat-icon>add</mat-icon>
+                                Nuevo Equipo
+                            </button>
+                            <button
+                                mat-raised-button
+                                color="accent"
+                                class="export-btn"
+                            >
+                                <mat-icon>download</mat-icon>
+                                Exportar Datos
+                            </button>
+                        </div>
                     </div>
                 </mat-card-content>
             </mat-card>
@@ -126,111 +139,50 @@ import { ApiPaginationResponse } from '../../../../core/models/api-response';
                                 </th>
                                 <td mat-cell *matCellDef="let team">
                                     <div class="d-flex align-items-center">
-                                        <img
-                                            [src]="team.logo"
-                                            class="team-logo"
-                                            alt="logo"
-                                        />
                                         {{ team.name }}
                                     </div>
                                 </td>
                             </ng-container>
 
-                            <!-- Columna PJ -->
-                            <ng-container matColumnDef="gamesPlayed">
+                            <!-- Columna Descripción -->
+                            <ng-container matColumnDef="description">
                                 <th
                                     mat-header-cell
                                     *matHeaderCellDef
                                     mat-sort-header
                                 >
-                                    PJ
+                                    Descripción
                                 </th>
                                 <td mat-cell *matCellDef="let team">
-                                    {{ team.gamesPlayed }}
+                                    {{ team.description || 'Sin descripción' }}
                                 </td>
                             </ng-container>
 
-                            <!-- Columna PG -->
-                            <ng-container matColumnDef="gamesWon">
+                            <!-- Columna Fundado -->
+                            <ng-container matColumnDef="founded">
                                 <th
                                     mat-header-cell
                                     *matHeaderCellDef
                                     mat-sort-header
                                 >
-                                    PG
+                                    Fundado
                                 </th>
                                 <td mat-cell *matCellDef="let team">
-                                    {{ team.gamesWon }}
+                                    {{ (team.founded | date:'yyyy') || 'No disponible' }}
                                 </td>
                             </ng-container>
 
-                            <!-- Columna PE -->
-                            <ng-container matColumnDef="gamesTied">
+                            <!-- Columna Atletas -->
+                            <ng-container matColumnDef="athletes">
                                 <th
                                     mat-header-cell
                                     *matHeaderCellDef
                                     mat-sort-header
                                 >
-                                    PE
+                                    Atletas
                                 </th>
                                 <td mat-cell *matCellDef="let team">
-                                    {{ team.gamesTied }}
-                                </td>
-                            </ng-container>
-
-                            <!-- Columna PP -->
-                            <ng-container matColumnDef="gamesLost">
-                                <th
-                                    mat-header-cell
-                                    *matHeaderCellDef
-                                    mat-sort-header
-                                >
-                                    PP
-                                </th>
-                                <td mat-cell *matCellDef="let team">
-                                    {{ team.gamesLost }}
-                                </td>
-                            </ng-container>
-
-                            <!-- Columna GF -->
-                            <ng-container matColumnDef="goalsScored">
-                                <th
-                                    mat-header-cell
-                                    *matHeaderCellDef
-                                    mat-sort-header
-                                >
-                                    GF
-                                </th>
-                                <td mat-cell *matCellDef="let team">
-                                    {{ team.goalsScored }}
-                                </td>
-                            </ng-container>
-
-                            <!-- Columna GC -->
-                            <ng-container matColumnDef="goalsAgainst">
-                                <th
-                                    mat-header-cell
-                                    *matHeaderCellDef
-                                    mat-sort-header
-                                >
-                                    GC
-                                </th>
-                                <td mat-cell *matCellDef="let team">
-                                    {{ team.goalsAgainst }}
-                                </td>
-                            </ng-container>
-
-                            <!-- Columna DG -->
-                            <ng-container matColumnDef="goalDifference">
-                                <th
-                                    mat-header-cell
-                                    *matHeaderCellDef
-                                    mat-sort-header
-                                >
-                                    DG
-                                </th>
-                                <td mat-cell *matCellDef="let team">
-                                    {{ team.goalsScored - team.goalsAgainst }}
+                                    {{ team.athletes?.length || 0 }}
                                 </td>
                             </ng-container>
 
@@ -245,10 +197,27 @@ import { ApiPaginationResponse } from '../../../../core/models/api-response';
                                         color="primary"
                                         [routerLink]="[
                                             '/estadisticas/equipos',
-                                            team.id
+                                            team._id
                                         ]"
+                                        matTooltip="Ver detalles"
                                     >
                                         <mat-icon>visibility</mat-icon>
+                                    </button>
+                                    <button
+                                        mat-icon-button
+                                        color="accent"
+                                        (click)="editEquipo(team)"
+                                        matTooltip="Editar"
+                                    >
+                                        <mat-icon>edit</mat-icon>
+                                    </button>
+                                    <button
+                                        mat-icon-button
+                                        color="warn"
+                                        (click)="deleteEquipo(team)"
+                                        matTooltip="Eliminar"
+                                    >
+                                        <mat-icon>delete</mat-icon>
                                     </button>
                                 </td>
                             </ng-container>
@@ -392,16 +361,12 @@ import { ApiPaginationResponse } from '../../../../core/models/api-response';
     ],
 })
 export class EquiposComponent implements OnInit {
-    dataSource: StatisticsTeam[] = [];
+    dataSource: any[] = [];
     displayedColumns: string[] = [
         'name',
-        'gamesPlayed',
-        'gamesWon',
-        'gamesTied',
-        'gamesLost',
-        'goalsScored',
-        'goalsAgainst',
-        'goalDifference',
+        'description',
+        'founded',
+        'athletes',
         'actions',
     ];
     isLoading = false;
@@ -417,7 +382,11 @@ export class EquiposComponent implements OnInit {
         sortDirection: 'asc',
     };
 
-    constructor(private statisticsService: StatisticsService) {}
+    constructor(
+        private statisticsService: StatisticsService,
+        private dialog: MatDialog,
+        private snackBar: MatSnackBar
+    ) {}
 
     ngOnInit() {
         this.loadEstadisticas();
@@ -426,15 +395,30 @@ export class EquiposComponent implements OnInit {
     loadEstadisticas() {
         this.isLoading = true;
         this.statisticsService.getAllTeamsStatistics(this.filter).subscribe({
-            next: (response: ApiPaginationResponse<StatisticsTeam>) => {
-                this.dataSource = response.data;
-                this.totalEquipos = response.meta.pagination.count;
+            next: (response: any) => {
+                console.log('Datos de equipos recibidos del backend:', response);
+                // Si la respuesta es un array directo (no paginada)
+                if (Array.isArray(response)) {
+                    this.dataSource = response;
+                    this.totalEquipos = response.length;
+                } else if (response && response.data && response.meta) {
+                    // Si la respuesta es paginada
+                    this.dataSource = response.data;
+                    this.totalEquipos = response.meta.pagination.count;
+                } else {
+                    // Fallback: intentar mostrar lo que venga
+                    this.dataSource = response.data || response || [];
+                    this.totalEquipos = this.dataSource.length;
+                }
                 this.calcularEstadisticasGenerales();
                 this.isLoading = false;
             },
-            error: (error) => {
+            error: (error: any) => {
                 console.error('Error al cargar estadísticas:', error);
                 this.isLoading = false;
+                this.snackBar.open('Error al cargar los equipos', 'Cerrar', {
+                    duration: 3000
+                });
             },
         });
     }
@@ -473,5 +457,56 @@ export class EquiposComponent implements OnInit {
         this.victoriasPorcentaje = Math.round(
             (totalVictorias / totalPartidos) * 100
         );
+    }
+
+    createEquipo() {
+        const dialogRef = this.dialog.open(EquipoFormComponent, {
+            width: '600px',
+            data: {}
+        });
+
+        dialogRef.afterClosed().subscribe((result) => {
+            if (result) {
+                this.loadEstadisticas();
+                this.snackBar.open('Equipo creado exitosamente', 'Cerrar', {
+                    duration: 3000
+                });
+            }
+        });
+    }
+
+    editEquipo(equipo: StatisticsTeam) {
+        const dialogRef = this.dialog.open(EquipoFormComponent, {
+            width: '600px',
+            data: { equipo }
+        });
+
+        dialogRef.afterClosed().subscribe((result) => {
+            if (result) {
+                this.loadEstadisticas();
+                this.snackBar.open('Equipo actualizado exitosamente', 'Cerrar', {
+                    duration: 3000
+                });
+            }
+        });
+    }
+
+    deleteEquipo(equipo: StatisticsTeam) {
+        if (confirm(`¿Está seguro de que desea eliminar el equipo "${equipo.name}"?`)) {
+            this.statisticsService.deleteTeamStatistics(equipo.id).subscribe({
+                next: () => {
+                    this.loadEstadisticas();
+                    this.snackBar.open('Equipo eliminado exitosamente', 'Cerrar', {
+                        duration: 3000
+                    });
+                },
+                error: (error) => {
+                    this.snackBar.open('Error al eliminar el equipo', 'Cerrar', {
+                        duration: 3000
+                    });
+                    console.error('Error:', error);
+                }
+            });
+        }
     }
 }

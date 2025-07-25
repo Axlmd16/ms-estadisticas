@@ -82,40 +82,73 @@ export const routes: Routes = [
                 path: 'estadisticas',
                 children: [
                     { path: '', redirectTo: 'equipos', pathMatch: 'full' },
-                    // {
-                    //     path: 'equipos',
-                    //     loadComponent: () =>
-                    //         import(
-                    //             './feature/estadisticas/components/equipos/equipos.component'
-                    //         ).then((m) => m.EquiposComponent),
-                    // },
-                    // {
-                    //     path: 'equipos/:id',
-                    //     loadComponent: () =>
-                    //         import(
-                    //             './feature/estadisticas/components/equipo-detalle/equipo-detalle.component'
-                    //         ).then((m) => m.EquipoDetalleComponent),
-                    // },
+                    // Equipos
+                    {
+                        path: 'equipos',
+                        loadComponent: () =>
+                            import(
+                                './features/estadisticas/components/equipos/equipos.component'
+                            ).then((m) => m.EquiposComponent),
+                    },
+                    {
+                        path: 'equipos/:id',
+                        loadComponent: () =>
+                            import(
+                                './features/estadisticas/components/equipo-detalle/equipo-detalle.component'
+                            ).then((m) => m.EquipoDetalleComponent),
+                    },
+                    // Temporadas
                     {
                         path: 'temporadas',
                         loadComponent: () =>
                             import(
-                                './feature/estadisticas/components/temporadas/temporadas.component'
+                                './features/estadisticas/components/temporadas/temporadas.component'
                             ).then((m) => m.TemporadasComponent),
                     },
+                    {
+                        path: 'temporadas/:id',
+                        loadComponent: () =>
+                            import(
+                                './features/estadisticas/components/temporadas/temporada-detalle/temporada-detalle.component'
+                            ).then((m) => m.TemporadaDetalleComponent),
+                    },
+                    // Jugadores
                     {
                         path: 'jugadores',
                         loadComponent: () =>
                             import(
-                                './feature/estadisticas/components/jugadores/jugadores.component'
+                                './features/estadisticas/components/jugadores/jugadores.component'
                             ).then((m) => m.JugadoresComponent),
                     },
                     {
-                        path: 'competiciones',
+                        path: 'jugadores/:id',
                         loadComponent: () =>
                             import(
-                                './feature/estadisticas/components/competiciones/competiciones.component'
-                            ).then((m) => m.CompeticionesComponent),
+                                './features/estadisticas/components/jugadores/jugador-detalle/jugador-detalle.component'
+                            ).then((m) => m.JugadorDetalleComponent),
+                    },
+                    // Competencias
+                    {
+                        path: 'competencias',
+                        loadComponent: () =>
+                            import(
+                                './features/estadisticas/components/competencias/competencias.component'
+                            ).then((m) => m.CompetenciasComponent),
+                    },
+                    {
+                        path: 'competencias/:id',
+                        loadComponent: () =>
+                            import(
+                                './features/estadisticas/components/competencias/competencia-detalle/competencia-detalle.component'
+                            ).then((m) => m.CompetenciaDetalleComponent),
+                    },
+                    // Tabla de Posiciones
+                    {
+                        path: 'tabla-posiciones',
+                        loadComponent: () =>
+                            import(
+                                './features/estadisticas/components/tabla-posiciones/tabla-posiciones.component'
+                            ).then((m) => m.TablaPosicionesComponent),
                     },
                 ],
             },
