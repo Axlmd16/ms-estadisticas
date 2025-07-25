@@ -1,42 +1,45 @@
-import { Team } from './team.model';
+import { Team } from './Team';
 
 /**
  * Modelo para estadísticas de equipo
  */
 export interface StatisticsTeam {
-  /** ID único de las estadísticas */
-  id: string;
+    /** ID único de las estadísticas */
+    id: string;
 
-  /** Equipo al que pertenecen las estadísticas */
-  team: Team;
+    /** ID del equipo */
+    teamId: string;
 
-  /** Partidos jugados */
-  matches_played: number;
+    /** Nombre del equipo */
+    name: string;
 
-  /** Partidos ganados */
-  matches_won: number;
+    /** URL del logo del equipo */
+    logo?: string;
 
-  /** Partidos empatados */
-  matches_drawn: number;
+    /** Número total de partidos jugados */
+    gamesPlayed: number;
 
-  /** Partidos perdidos */
-  matches_lost: number;
+    /** Número de partidos ganados */
+    gamesWon: number;
 
-  /** Goles a favor */
-  goals_for: number;
+    /** Número de partidos empatados */
+    gamesTied: number;
 
-  /** Goles en contra */
-  goals_against: number;
+    /** Número de partidos perdidos */
+    gamesLost: number;
 
-  /** Diferencia de goles */
-  goal_difference: number;
+    /** Goles anotados */
+    goalsScored: number;
 
-  /** Puntos totales */
-  points: number;
+    /** Goles recibidos */
+    goalsAgainst: number;
 
-  /** Fecha de creación */
-  created_at: Date;
+    /** ID de la temporada */
+    seasonId: string;
 
-  /** Fecha de última actualización */
-  updated_at: Date;
+    /** Fecha de creación */
+    createdAt: string;
+
+    /** Fecha de última actualización */
+    updatedAt: string;
 }
