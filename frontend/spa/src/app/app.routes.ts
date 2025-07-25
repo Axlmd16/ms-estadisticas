@@ -111,11 +111,11 @@ export const routes: Routes = [
                             ).then((m) => m.JugadoresComponent),
                     },
                     {
-                        path: 'competencias',
+                        path: 'competiciones',
                         loadComponent: () =>
                             import(
-                                './feature/estadisticas/components/competencias/competencias.component'
-                            ).then((m) => m.CompetenciasComponent),
+                                './feature/estadisticas/components/competiciones/competiciones.component'
+                            ).then((m) => m.CompeticionesComponent),
                     },
                 ],
             },
