@@ -4,7 +4,7 @@
  */
 export const API_ENDPOINTS = {
     // URL base apunta a Kong API Gateway
-    BASE_URL: 'http://localhost:8000',
+    BASE_URL: 'http://localhost:8012',
 
     CATALOG: {
         CATEGORIES: '/catalog/categories/',
@@ -22,11 +22,11 @@ export const API_ENDPOINTS = {
     },
 
     STATISTICS: {
-        BASE: '/statistics',
-        TEAMS: '/statistics/teams',
-        SEASONS: '/statistics/seasons',
-        PLAYERS: '/statistics/players',
-        COMPETITIONS: '/statistics/competitions',
+        BASE: '/api/v1/statistics',
+        TEAMS: '/api/v1/statistics/team',
+        SEASONS: '/api/v1/statistics/seasons',
+        PLAYERS: '/api/v1/statistics/players',
+        COMPETITIONS: '/api/v1/statistics/competition',
     },
 } as const;
 

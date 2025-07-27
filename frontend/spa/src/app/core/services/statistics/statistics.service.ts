@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, tap, catchError } from 'rxjs/operators';
 
 import {
     StatisticsTeam,
@@ -69,6 +69,7 @@ export interface Team {
     name: string;
     description?: string;
     founded?: number;
+    athletes?: any[]; // Array de atletas del equipo
 }
 
 export interface TeamCreate {
@@ -212,7 +213,11 @@ export class StatisticsService {
     private matchesApiUrl = 'http://localhost:8012/api/v1/matches';
     private resultsApiUrl = 'http://localhost:8012/api/v1/results';
 
-    constructor(private http: HttpClient) {}
+    constructor(private http: HttpClient) {
+        console.log('🔧 StatisticsService initialized');
+        console.log('📊 Teams URL:', this.teamsUrl);
+        console.log('🏆 Competitions URL:', this.competitionsUrl);
+    }
 
     /**
      * Construye los parámetros HTTP para filtrado y paginación
@@ -259,7 +264,26 @@ export class StatisticsService {
      * Obtiene las estadísticas de un equipo con información completa del equipo
      */
     getTeamStatisticsWithInfo(teamId: string): Observable<TeamStatisticsWithInfo> {
-        return this.http.get<TeamStatisticsWithInfo>(`${this.teamsUrl}/by-team/${teamId}/with-team-info`);
+        // Usar URL directa para debugging
+        const directUrl = `http://localhost:8012/api/v1/statistics/team/by-team/${teamId}`;
+        console.log('🌐 Making API call to:', directUrl);
+        console.log('🔗 Teams URL base:', this.teamsUrl);
+        
+        return this.http.get<TeamStatisticsWithInfo>(directUrl).pipe(
+            tap((response: any) => {
+                console.log('✅ API Response received:', response);
+            }),
+            catchError((error: any) => {
+                console.error('❌ API Error:', error);
+                console.error('📍 Error details:', {
+                    status: error.status,
+                    statusText: error.statusText,
+                    url: error.url,
+                    message: error.message
+                });
+                throw error;
+            })
+        );
     }
 
     /**

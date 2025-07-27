@@ -9,7 +9,7 @@ from app.schemas.statistics_team_schema import (
 )
 from app.services.statistics_team_service import statistic_team_service
 
-router = APIRouter(prefix="/statistics/team", tags=["Statistic Team"])
+router = APIRouter(prefix="/api/v1/statistics/team", tags=["Statistic Team"])
 
 @router.post("/", response_model=StatisticTeamResponse)
 async def create_statistic_team(stat: StatisticTeamCreate):
@@ -33,7 +33,7 @@ async def list_statistic_teams():
     """
     return await statistic_team_service.list_statistic_teams()
 
-@router.get("/by-team/{team_id}/with-team-info", response_model=StatisticTeamWithTeamResponse)
+@router.get("/by-team/{team_id}", response_model=StatisticTeamWithTeamResponse)
 async def get_statistic_team_by_team_id(team_id: str = Path(...)):
     """
     Obtiene las estadísticas de un equipo específico buscando por su ID de equipo.

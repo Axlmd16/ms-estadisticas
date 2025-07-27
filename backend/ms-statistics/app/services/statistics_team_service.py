@@ -320,9 +320,19 @@ class StatisticTeamService:
         """
         logger.info(f"Searching statistics for team_id: {team_id}")
         
-        # Buscar estadísticas por ID de equipo en el campo id_team
+        # Buscar estadísticas por ID de equipo en el campo id_team - Búsqueda dual
+        # Primero intentar como string
         stat = await self.repo.find_one({"id_team": team_id})
-        logger.info(f"Found statistics: {stat}")
+        logger.info(f"Search with string - Found statistics: {stat}")
+        
+        # Si no encuentra como string, intentar como ObjectId
+        if not stat:
+            try:
+                team_object_id = ObjectId(team_id)
+                stat = await self.repo.find_one({"id_team": team_object_id})
+                logger.info(f"Search with ObjectId - Found statistics: {stat}")
+            except Exception as e:
+                logger.error(f"Error converting team_id to ObjectId: {e}")
         
         if not stat:
             logger.warning(f"No statistics found for team {team_id}")
