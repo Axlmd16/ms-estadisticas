@@ -14,6 +14,7 @@ import { StatisticsService } from '../../../../../core/services/statistics/stati
 import { StatisticsCompetence, TableRating, StatisticsFilter } from '../../../../../core/models/statistics';
 import { CompetenciaFormComponent } from '../competencia-form/competencia-form.component';
 import { ApiPaginationResponse } from '../../../../../core/models/api-response';
+import type { CompetitionWithTeams } from '../../../../../core/services/statistics/statistics.service';
 
 @Component({
     selector: 'app-competencia-detalle',
@@ -28,14 +29,14 @@ import { ApiPaginationResponse } from '../../../../../core/models/api-response';
         MatTableModule,
     ],
     template: `
-        <div class="competencia-detail-container" *ngIf="!isLoading && competencia">
+        <div class="competencia-detail-container" *ngIf="competenciaCompleta">
             <!-- Encabezado -->
             <mat-card class="header-card">
                 <mat-card-header>
                     <div mat-card-avatar class="competition-avatar">
                         <mat-icon>emoji_events</mat-icon>
                     </div>
-                    <mat-card-title>{{ competencia.competition_name }}</mat-card-title>
+                    <mat-card-title>{{ competenciaCompleta.name || competencia?.competition_name }}</mat-card-title>
                     <mat-card-subtitle>
                         Estadísticas detalladas de la competencia
                     </mat-card-subtitle>
@@ -60,7 +61,7 @@ import { ApiPaginationResponse } from '../../../../../core/models/api-response';
                             <mat-icon>groups</mat-icon>
                         </div>
                         <div class="stat-info">
-                            <div class="stat-value">{{ competencia.total_teams }}</div>
+                            <div class="stat-value">{{ competenciaCompleta.teams?.length || competencia?.total_teams || 0 }}</div>
                             <div class="stat-label">Equipos</div>
                         </div>
                     </mat-card-content>
@@ -72,7 +73,7 @@ import { ApiPaginationResponse } from '../../../../../core/models/api-response';
                             <mat-icon>sports_soccer</mat-icon>
                         </div>
                         <div class="stat-info">
-                            <div class="stat-value">{{ competencia.total_matches }}</div>
+                            <div class="stat-value">{{ competencia?.total_matches || 0 }}</div>
                             <div class="stat-label">Partidos</div>
                         </div>
                     </mat-card-content>
@@ -84,7 +85,7 @@ import { ApiPaginationResponse } from '../../../../../core/models/api-response';
                             <mat-icon>sports_score</mat-icon>
                         </div>
                         <div class="stat-info">
-                            <div class="stat-value">{{ competencia.total_goals }}</div>
+                            <div class="stat-value">{{ competencia?.total_goals || 0 }}</div>
                             <div class="stat-label">Goles</div>
                         </div>
                     </mat-card-content>
@@ -96,7 +97,7 @@ import { ApiPaginationResponse } from '../../../../../core/models/api-response';
                             <mat-icon>trending_up</mat-icon>
                         </div>
                         <div class="stat-info">
-                            <div class="stat-value">{{ competencia.average_goals_per_match | number:'1.2-2' }}</div>
+                            <div class="stat-value">{{ (competencia?.average_goals_per_match || 0) | number:'1.2-2' }}</div>
                             <div class="stat-label">Promedio Goles/Partido</div>
                         </div>
                     </mat-card-content>
@@ -115,27 +116,35 @@ import { ApiPaginationResponse } from '../../../../../core/models/api-response';
                                 <div class="info-grid">
                                     <div class="info-item">
                                         <strong>Nombre:</strong>
-                                        <span>{{ competencia.competition_name }}</span>
+                                        <span>{{ competenciaCompleta.name || competencia?.competition_name || 'N/A' }}</span>
                                     </div>
                                     <div class="info-item">
                                         <strong>ID de Competencia:</strong>
-                                        <span>{{ competencia.competition_id }}</span>
+                                        <span>{{ competenciaCompleta.id || competencia?.competition_id || competenciaId }}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <strong>Fecha de Inicio:</strong>
+                                        <span>{{ competenciaCompleta.start_date | date:'medium' }}</span>
+                                    </div>
+                                    <div class="info-item">
+                                        <strong>Fecha de Fin:</strong>
+                                        <span>{{ competenciaCompleta.end_date | date:'medium' }}</span>
                                     </div>
                                     <div class="info-item">
                                         <strong>Total de Equipos:</strong>
-                                        <span>{{ competencia.total_teams }}</span>
+                                        <span>{{ competenciaCompleta.teams?.length || competencia?.total_teams || 0 }}</span>
                                     </div>
-                                    <div class="info-item">
+                                    <div class="info-item" *ngIf="competencia?.total_matches">
                                         <strong>Total de Partidos:</strong>
-                                        <span>{{ competencia.total_matches }}</span>
+                                        <span>{{ competencia?.total_matches }}</span>
                                     </div>
-                                    <div class="info-item">
+                                    <div class="info-item" *ngIf="competencia?.total_goals">
                                         <strong>Total de Goles:</strong>
-                                        <span>{{ competencia.total_goals }}</span>
+                                        <span>{{ competencia?.total_goals }}</span>
                                     </div>
-                                    <div class="info-item">
+                                    <div class="info-item" *ngIf="competencia?.average_goals_per_match">
                                         <strong>Promedio de Goles:</strong>
-                                        <span>{{ competencia.average_goals_per_match | number:'1.2-2' }}</span>
+                                        <span>{{ competencia?.average_goals_per_match | number:'1.2-2' }}</span>
                                     </div>
                                 </div>
                             </mat-card-content>
@@ -150,24 +159,34 @@ import { ApiPaginationResponse } from '../../../../../core/models/api-response';
                                 <mat-card-title>Métricas de Rendimiento</mat-card-title>
                             </mat-card-header>
                             <mat-card-content>
-                                <div class="metrics-grid">
-                                    <div class="metric-item">
-                                        <div class="metric-value">{{ competencia.total_teams }}</div>
-                                        <div class="metric-label">Equipos Participantes</div>
-                                    </div>
-                                    <div class="metric-item">
-                                        <div class="metric-value">{{ competencia.total_matches }}</div>
-                                        <div class="metric-label">Partidos Jugados</div>
-                                    </div>
-                                    <div class="metric-item">
-                                        <div class="metric-value">{{ competencia.total_goals }}</div>
-                                        <div class="metric-label">Total de Goles</div>
-                                    </div>
-                                    <div class="metric-item">
-                                        <div class="metric-value">{{ competencia.average_goals_per_match | number:'1.2-2' }}</div>
-                                        <div class="metric-label">Goles por Partido</div>
+                                <div *ngIf="competencia; else noStatsAvailable">
+                                    <div class="metrics-grid">
+                                        <div class="metric-item">
+                                            <div class="metric-value">{{ competenciaCompleta.teams?.length || competencia?.total_teams || 0 }}</div>
+                                            <div class="metric-label">Equipos Participantes</div>
+                                        </div>
+                                        <div class="metric-item">
+                                            <div class="metric-value">{{ competencia.total_matches || 0 }}</div>
+                                            <div class="metric-label">Partidos Jugados</div>
+                                        </div>
+                                        <div class="metric-item">
+                                            <div class="metric-value">{{ competencia.total_goals || 0 }}</div>
+                                            <div class="metric-label">Total de Goles</div>
+                                        </div>
+                                        <div class="metric-item">
+                                            <div class="metric-value">{{ (competencia.average_goals_per_match || 0) | number:'1.2-2' }}</div>
+                                            <div class="metric-label">Goles por Partido</div>
+                                        </div>
                                     </div>
                                 </div>
+                                <ng-template #noStatsAvailable>
+                                    <div class="no-data">
+                                        <mat-icon>analytics</mat-icon>
+                                        <h3>Estadísticas no disponibles</h3>
+                                        <p>Las estadísticas de esta competencia aún no están disponibles.</p>
+                                        <p>Se mostrarán una vez que se registren partidos y resultados.</p>
+                                    </div>
+                                </ng-template>
                             </mat-card-content>
                         </mat-card>
                     </div>
@@ -180,22 +199,75 @@ import { ApiPaginationResponse } from '../../../../../core/models/api-response';
                                 <mat-card-title>Estadísticas Disciplinarias</mat-card-title>
                             </mat-card-header>
                             <mat-card-content>
-                                <div class="discipline-grid">
-                                    <div class="discipline-item yellow">
-                                        <div class="card-icon">
-                                            <mat-icon>warning</mat-icon>
+                                <div *ngIf="competencia; else noDisciplineData">
+                                    <div class="discipline-grid">
+                                        <div class="discipline-item yellow">
+                                            <div class="card-icon">
+                                                <mat-icon>warning</mat-icon>
+                                            </div>
+                                            <div class="card-count">{{ competencia.total_yellow_cards || 0 }}</div>
+                                            <div class="card-label">Tarjetas Amarillas</div>
                                         </div>
-                                        <div class="card-count">{{ competencia.total_yellow_cards }}</div>
-                                        <div class="card-label">Tarjetas Amarillas</div>
-                                    </div>
-                                    <div class="discipline-item red">
-                                        <div class="card-icon">
-                                            <mat-icon>error</mat-icon>
+                                        <div class="discipline-item red">
+                                            <div class="card-icon">
+                                                <mat-icon>error</mat-icon>
+                                            </div>
+                                            <div class="card-count">{{ competencia.total_red_cards || 0 }}</div>
+                                            <div class="card-label">Tarjetas Rojas</div>
                                         </div>
-                                        <div class="card-count">{{ competencia.total_red_cards }}</div>
-                                        <div class="card-label">Tarjetas Rojas</div>
                                     </div>
                                 </div>
+                                <ng-template #noDisciplineData>
+                                    <div class="no-data">
+                                        <mat-icon>gavel</mat-icon>
+                                        <h3>Datos disciplinarios no disponibles</h3>
+                                        <p>Los datos de tarjetas se mostrarán cuando se registren partidos.</p>
+                                    </div>
+                                </ng-template>
+                            </mat-card-content>
+                        </mat-card>
+                    </div>
+                </mat-tab>
+
+                <mat-tab label="Equipos">
+                    <div class="tab-content">
+                        <mat-card>
+                            <mat-card-header>
+                                <mat-card-title>Equipos Participantes</mat-card-title>
+                                <mat-card-subtitle>{{ competenciaCompleta.teams?.length || 0 }} equipos registrados</mat-card-subtitle>
+                            </mat-card-header>
+                            <mat-card-content>
+                                <div *ngIf="competenciaCompleta.teams && competenciaCompleta.teams.length > 0; else noTeams">
+                                    <div class="teams-grid">
+                                        <mat-card *ngFor="let team of competenciaCompleta.teams" class="team-card">
+                                            <mat-card-header>
+                                                <div mat-card-avatar class="team-avatar">
+                                                    <mat-icon>groups</mat-icon>
+                                                </div>
+                                                <mat-card-title>{{ team.name }}</mat-card-title>
+                                                <mat-card-subtitle *ngIf="team.description">{{ team.description }}</mat-card-subtitle>
+                                            </mat-card-header>
+                                            <mat-card-content>
+                                                <div class="team-info" *ngIf="team.founded">
+                                                    <mat-icon>event</mat-icon>
+                                                    <span>Fundado en {{ team.founded }}</span>
+                                                </div>
+                                            </mat-card-content>
+                                            <mat-card-actions>
+                                                <button mat-raised-button color="primary" (click)="viewTeamStatistics(team._id || team.id || '')">
+                                                    <mat-icon>visibility</mat-icon>
+                                                    Ver Estadísticas
+                                                </button>
+                                            </mat-card-actions>
+                                        </mat-card>
+                                    </div>
+                                </div>
+                                <ng-template #noTeams>
+                                    <div class="no-data">
+                                        <mat-icon>groups_off</mat-icon>
+                                        <p>No hay equipos registrados en esta competencia</p>
+                                    </div>
+                                </ng-template>
                             </mat-card-content>
                         </mat-card>
                     </div>
@@ -305,95 +377,211 @@ import { ApiPaginationResponse } from '../../../../../core/models/api-response';
                 padding: 24px;
                 max-width: 1200px;
                 margin: 0 auto;
+                background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+                min-height: 100vh;
+                border-radius: 12px;
             }
 
             .header-card {
-                margin-bottom: 24px;
+                margin-bottom: 32px;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                border-radius: 16px;
+                box-shadow: 0 8px 32px rgba(102, 126, 234, 0.25);
+            }
+
+            .header-card .mat-card-title {
+                color: white;
+                font-size: 2rem;
+                font-weight: 600;
+            }
+
+            .header-card .mat-card-subtitle {
+                color: rgba(255, 255, 255, 0.8);
+                font-size: 1.1rem;
             }
 
             .competition-avatar {
-                background-color: #ff9800;
+                background: rgba(255, 255, 255, 0.2);
                 color: white;
                 display: flex;
                 align-items: center;
                 justify-content: center;
+                backdrop-filter: blur(10px);
             }
 
             .stats-grid {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                gap: 16px;
-                margin-bottom: 24px;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 20px;
+                margin-bottom: 32px;
+            }
+
+            .stat-card {
+                border-radius: 16px;
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+                border: none;
+                background: white;
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+            }
+
+            .stat-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
             }
 
             .stat-card .mat-card-content {
                 display: flex;
                 align-items: center;
                 gap: 16px;
+                padding: 20px !important;
+            }
+
+            .stat-card:nth-child(1) .stat-icon {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+            }
+
+            .stat-card:nth-child(2) .stat-icon {
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                color: white;
+            }
+
+            .stat-card:nth-child(3) .stat-icon {
+                background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+                color: white;
+            }
+
+            .stat-card:nth-child(4) .stat-icon {
+                background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+                color: white;
             }
 
             .stat-icon {
-                background-color: #fff3e0;
                 border-radius: 50%;
-                width: 48px;
-                height: 48px;
+                width: 56px;
+                height: 56px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                color: #ff9800;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             }
 
             .stat-value {
-                font-size: 2rem;
-                font-weight: bold;
-                color: #ff9800;
+                font-size: 2.2rem;
+                font-weight: 700;
+                color: #2c3e50;
+                margin-bottom: 4px;
             }
 
             .stat-label {
-                font-size: 0.875rem;
-                color: #757575;
+                font-size: 0.9rem;
+                color: #718096;
+                font-weight: 500;
             }
 
             .tab-content {
                 padding: 24px 0;
             }
 
+            .tab-content .mat-card {
+                border-radius: 16px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+                border: none;
+                background: white;
+            }
+
+            .tab-content .mat-card-header {
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                border-bottom: 1px solid #dee2e6;
+                border-radius: 16px 16px 0 0;
+            }
+
+            .tab-content .mat-card-title {
+                color: #2c3e50 !important;
+                font-weight: 600 !important;
+                font-size: 1.4rem !important;
+            }
+
+            .tab-content .mat-card-subtitle {
+                color: #6c757d !important;
+                font-size: 0.95rem !important;
+            }
+
+            .tab-content .mat-card-content {
+                padding: 24px !important;
+            }
+
             .info-grid {
                 display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 16px;
+                grid-template-columns: 1fr;
+                gap: 12px;
             }
 
             .info-item {
                 display: flex;
                 justify-content: space-between;
-                padding: 8px 0;
-                border-bottom: 1px solid #e0e0e0;
+                align-items: center;
+                padding: 16px 20px;
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                border-radius: 12px;
+                border: 1px solid #dee2e6;
+                transition: all 0.3s ease;
+            }
+
+            .info-item:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            }
+
+            .info-item strong {
+                color: #2c3e50;
+                font-weight: 600;
+                font-size: 0.95rem;
+            }
+
+            .info-item span {
+                color: #495057;
+                font-weight: 500;
+                text-align: right;
             }
 
             .metrics-grid {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
                 gap: 24px;
                 text-align: center;
             }
 
             .metric-item {
-                padding: 16px;
-                border-radius: 8px;
-                background-color: #f5f5f5;
+                padding: 24px 20px;
+                border-radius: 16px;
+                background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+                border: 1px solid #dee2e6;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+                transition: all 0.3s ease;
+            }
+
+            .metric-item:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
             }
 
             .metric-value {
-                font-size: 2.5rem;
-                font-weight: bold;
-                color: #ff9800;
+                font-size: 2.8rem;
+                font-weight: 700;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent;
+                background-clip: text;
+                margin-bottom: 8px;
             }
 
             .metric-label {
                 font-size: 1rem;
-                color: #757575;
+                color: #6c757d;
                 margin-top: 8px;
+                font-weight: 500;
             }
 
             .discipline-grid {
@@ -464,17 +652,106 @@ import { ApiPaginationResponse } from '../../../../../core/models/api-response';
                 margin-top: 16px;
             }
 
+            .teams-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+                gap: 20px;
+                margin-top: 24px;
+            }
+
+            .team-card {
+                transition: transform 0.3s ease, box-shadow 0.3s ease;
+                border-radius: 16px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+                border: none;
+                background: white;
+                overflow: hidden;
+            }
+
+            .team-card:hover {
+                transform: translateY(-6px);
+                box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+            }
+
+            .team-card .mat-card-header {
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                padding: 20px !important;
+                border-bottom: 1px solid #dee2e6;
+            }
+
+            .team-card .mat-card-content {
+                padding: 16px 20px !important;
+            }
+
+            .team-avatar {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+                color: white !important;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 48px !important;
+                height: 48px !important;
+                border-radius: 50% !important;
+            }
+
+            .team-card .mat-card-title {
+                font-size: 1.2rem !important;
+                font-weight: 600 !important;
+                color: #2c3e50 !important;
+                margin: 0 !important;
+            }
+
+            .team-card .mat-card-subtitle {
+                color: #6c757d !important;
+                font-size: 0.9rem !important;
+                margin-top: 4px !important;
+            }
+
+            .team-info {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                color: #757575;
+                font-size: 0.875rem;
+            }
+
+            .team-info mat-icon {
+                font-size: 16px;
+                width: 16px;
+                height: 16px;
+            }
+
             .no-data {
                 text-align: center;
-                padding: 48px;
-                color: #757575;
+                padding: 48px 24px;
+                color: #6c757d;
+                background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+                border-radius: 16px;
+                border: 2px dashed #dee2e6;
+                margin: 16px 0;
             }
 
             .no-data mat-icon {
-                font-size: 48px;
-                width: 48px;
-                height: 48px;
-                margin-bottom: 16px;
+                font-size: 64px;
+                width: 64px;
+                height: 64px;
+                margin-bottom: 20px;
+                opacity: 0.6;
+                color: #adb5bd;
+            }
+
+            .no-data h3 {
+                margin: 16px 0 12px 0;
+                color: #495057;
+                font-weight: 600;
+                font-size: 1.4rem;
+            }
+
+            .no-data p {
+                margin: 8px 0;
+                line-height: 1.6;
+                font-size: 1rem;
+                color: #6c757d;
             }
 
             .loading-container,
@@ -483,15 +760,47 @@ import { ApiPaginationResponse } from '../../../../../core/models/api-response';
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                min-height: 300px;
+                min-height: 400px;
                 text-align: center;
+                background: rgba(255, 255, 255, 0.9);
+                border-radius: 16px;
+                margin: 20px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            }
+
+            .loading-container p {
+                margin-top: 16px;
+                color: #6c757d;
+                font-size: 1.1rem;
             }
 
             .error-content {
                 display: flex;
                 flex-direction: column;
                 align-items: center;
-                gap: 16px;
+                gap: 20px;
+                padding: 20px;
+            }
+
+            .error-content mat-icon {
+                font-size: 64px;
+                width: 64px;
+                height: 64px;
+                color: #dc3545;
+            }
+
+            .error-content h3 {
+                color: #dc3545;
+                margin: 0;
+                font-size: 1.5rem;
+                font-weight: 600;
+            }
+
+            .error-content p {
+                color: #6c757d;
+                margin: 0;
+                font-size: 1rem;
+                line-height: 1.5;
             }
 
             /* Responsive */
@@ -511,12 +820,17 @@ import { ApiPaginationResponse } from '../../../../../core/models/api-response';
                 .discipline-grid {
                     grid-template-columns: 1fr;
                 }
+
+                .teams-grid {
+                    grid-template-columns: 1fr;
+                }
             }
         `,
     ],
 })
 export class CompetenciaDetalleComponent implements OnInit {
     competencia?: StatisticsCompetence;
+    competenciaCompleta?: CompetitionWithTeams;
     tableRatings: TableRating[] = [];
     isLoading = false;
     error: string | null = null;
@@ -536,22 +850,38 @@ export class CompetenciaDetalleComponent implements OnInit {
             if (params['id']) {
                 this.competenciaId = params['id'];
                 this.loadCompetenciaStatistics(this.competenciaId);
+                this.loadCompetenciaCompleta(this.competenciaId);
             }
         });
     }
 
-    loadCompetenciaStatistics(competenciaId: string) {
+    loadCompetenciaCompleta(competenciaId: string) {
         this.isLoading = true;
         this.error = null;
 
-        this.statisticsService.getCompetitionStatistics(competenciaId).subscribe({
-            next: (competencia) => {
-                this.competencia = competencia;
+        this.statisticsService.getCompetitionWithTeams(competenciaId).subscribe({
+            next: (competenciaCompleta) => {
+                this.competenciaCompleta = competenciaCompleta;
                 this.isLoading = false;
             },
             error: (error) => {
-                this.error = error.message || 'Error al cargar las estadísticas de la competencia';
+                this.error = error.message || 'Error al cargar la información de la competencia';
                 this.isLoading = false;
+                console.error('Error al cargar información completa de competencia:', error);
+            },
+        });
+    }
+
+    loadCompetenciaStatistics(competenciaId: string) {
+        this.statisticsService.getCompetitionStatistics(competenciaId).subscribe({
+            next: (competencia) => {
+                this.competencia = competencia;
+                console.log('Estadísticas de competencia cargadas:', competencia);
+            },
+            error: (error) => {
+                console.warn('No se pudieron cargar las estadísticas de la competencia:', error);
+                // No mostramos error ya que las estadísticas pueden no estar disponibles
+                // La información básica se mostrará desde competenciaCompleta
             },
         });
     }
@@ -598,6 +928,12 @@ export class CompetenciaDetalleComponent implements OnInit {
                     console.error('Error:', error);
                 },
             });
+        }
+    }
+
+    viewTeamStatistics(teamId: string) {
+        if (teamId) {
+            this.router.navigate(['/estadisticas/equipos', teamId, 'estadisticas']);
         }
     }
 }

@@ -5,6 +5,7 @@ from app.schemas.statistics_team_schema import (
     StatisticTeamCreate,
     StatisticTeamUpdate,
     StatisticTeamResponse,
+    StatisticTeamWithTeamResponse
 )
 from app.services.statistics_team_service import statistic_team_service
 
@@ -32,6 +33,18 @@ async def list_statistic_teams():
     """
     return await statistic_team_service.list_statistic_teams()
 
+@router.get("/by-team/{team_id}/with-team-info", response_model=StatisticTeamWithTeamResponse)
+async def get_statistic_team_by_team_id(team_id: str = Path(...)):
+    """
+    Obtiene las estadísticas de un equipo específico buscando por su ID de equipo.
+
+    Args:
+        team_id (str): ID del equipo.
+    Returns:
+        StatisticTeamWithTeamResponse: Información de la estadística de equipo con datos del equipo incluidos.
+    """
+    return await statistic_team_service.get_statistic_team_by_team_id(team_id)
+
 @router.get("/{stat_id}", response_model=StatisticTeamResponse)
 async def get_statistic_team(stat_id: PydanticObjectId = Path(...)):
     """
@@ -43,6 +56,18 @@ async def get_statistic_team(stat_id: PydanticObjectId = Path(...)):
         StatisticTeamResponse: Información de la estadística de equipo solicitada.
     """
     return await statistic_team_service.get_statistic_team(stat_id)
+
+@router.get("/{stat_id}/with-team-info", response_model=StatisticTeamWithTeamResponse)
+async def get_statistic_team_with_info(stat_id: PydanticObjectId = Path(...)):
+    """
+    Obtiene la información de una estadística de equipo con información completa del equipo.
+
+    Args:
+        stat_id (PydanticObjectId): ID de la estadística de equipo.
+    Returns:
+        StatisticTeamWithTeamResponse: Información de la estadística de equipo con datos del equipo incluidos.
+    """
+    return await statistic_team_service.get_statistic_team_with_team_info(stat_id)
 
 @router.put("/{stat_id}", response_model=StatisticTeamResponse)
 async def update_statistic_team(

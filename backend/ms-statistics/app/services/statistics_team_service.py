@@ -10,11 +10,14 @@ from fastapi import HTTPException, status
 from bson import ObjectId
 
 from app.repositories.statistics_team_repository import StatisticTeamRepository
+from app.repositories.team_repository import TeamRepository
 from app.schemas.statistics_team_schema import (
     StatisticTeamCreate,
     StatisticTeamUpdate,
     StatisticTeamResponse,
+    StatisticTeamWithTeamResponse,
 )
+from app.schemas.team_schema import TeamResponse
 
 logger = logging.getLogger(__name__)
 
@@ -24,9 +27,10 @@ class StatisticTeamService:
     """
     def __init__(self):
         """
-        Inicializa el servicio con una instancia del repositorio de estadísticas de equipo.
+        Inicializa el servicio con una instancia del repositorio de estadísticas de equipo y equipos.
         """
         self.repo = StatisticTeamRepository()
+        self.team_repo = TeamRepository()
 
     def _convert_string_ids_to_objectid(self, data: dict) -> dict:
         """
@@ -146,6 +150,51 @@ class StatisticTeamService:
             id_team=str(stat.id_team) if stat.id_team else None,
         )
 
+    async def get_statistic_team_with_team_info(self, stat_id: PydanticObjectId) -> StatisticTeamWithTeamResponse:
+        """
+        Obtiene una estadística de equipo por su ID junto con la información completa del equipo.
+
+        Args:
+            stat_id (PydanticObjectId): ID de la estadística de equipo.
+        Returns:
+            StatisticTeamWithTeamResponse: Estadística de equipo con información del equipo.
+        Raises:
+            HTTPException: Si la estadística no existe.
+        """
+        stat = await self.repo.get_by_id(stat_id)
+        if not stat:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail="StatisticTeam not found"
+            )
+        
+        # Obtener información del equipo si existe
+        team_info = None
+        if stat.id_team:
+            team = await self.team_repo.get_by_id(stat.id_team)
+            if team:
+                team_info = TeamResponse(
+                    id=str(team.id),
+                    name=team.name,
+                    description=team.description,
+                    founded=team.founded,
+                    athletes=[str(athlete_id) for athlete_id in team.athletes] if team.athletes else []
+                )
+        
+        return StatisticTeamWithTeamResponse(
+            id=str(stat.id),
+            description=stat.description,
+            date_generation=stat.date_generation,
+            value=stat.value,
+            games_played=stat.games_played,
+            matches_drawn=stat.matches_drawn,  
+            matches_lost=stat.matches_lost,
+            matches_won=stat.matches_won,
+            points=stat.points,
+            id_team=str(stat.id_team) if stat.id_team else None,
+            team=team_info
+        )
+
     async def update_statistic_team(self, stat_id: PydanticObjectId, stat: StatisticTeamUpdate) -> StatisticTeamResponse:
         """
         Actualiza los datos de una estadística de equipo existente.
@@ -257,5 +306,62 @@ class StatisticTeamService:
 
         await self.repo.update(stat_team.id, update_data)
         logger.info(f"StatisticTeam actualizado para el equipo {team_id}")
+
+    async def get_statistic_team_by_team_id(self, team_id: str) -> StatisticTeamWithTeamResponse:
+        """
+        Obtiene las estadísticas de un equipo específico por su ID de equipo.
+
+        Args:
+            team_id (str): ID del equipo.
+        Returns:
+            StatisticTeamWithTeamResponse: Estadística de equipo con información del equipo.
+        Raises:
+            HTTPException: Si no se encuentran estadísticas para el equipo.
+        """
+        logger.info(f"Searching statistics for team_id: {team_id}")
+        
+        # Buscar estadísticas por ID de equipo en el campo id_team
+        stat = await self.repo.find_one({"id_team": team_id})
+        logger.info(f"Found statistics: {stat}")
+        
+        if not stat:
+            logger.warning(f"No statistics found for team {team_id}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail=f"No statistics found for team {team_id}"
+            )
+        
+        # Obtener información del equipo
+        team = await self.team_repo.get_by_id(team_id)
+        logger.info(f"Found team: {team}")
+        
+        if not team:
+            logger.warning(f"Team {team_id} not found")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Team {team_id} not found"
+            )
+        
+        team_info = TeamResponse(
+            id=str(team.id),
+            name=team.name,
+            description=team.description,
+            founded=team.founded,
+            athletes=[str(athlete_id) for athlete_id in team.athletes] if team.athletes else []
+        )
+        
+        return StatisticTeamWithTeamResponse(
+            id=str(stat.id),
+            description=stat.description,
+            date_generation=stat.date_generation,
+            value=stat.value,
+            games_played=stat.games_played,
+            matches_drawn=stat.matches_drawn,  
+            matches_lost=stat.matches_lost,
+            matches_won=stat.matches_won,
+            points=stat.points,
+            id_team=str(stat.id_team) if stat.id_team else None,
+            team=team_info
+        )
 
 statistic_team_service = StatisticTeamService()

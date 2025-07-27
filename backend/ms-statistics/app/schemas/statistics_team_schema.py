@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from bson import ObjectId
 from datetime import datetime
+from app.schemas.team_schema import TeamResponse
 
 class StatisticTeamBase(BaseModel):
     """
@@ -66,6 +67,28 @@ class StatisticTeamResponse(StatisticTeamBase):
     def validate_id_team(cls, v):
         """
         Valida y transforma el ObjectId del campo id_team en string antes de la serialización.
+        """
+        if isinstance(v, ObjectId):
+            return str(v)
+        return str(v) if v else None
+
+    model_config = {
+        "populate_by_name": True,
+        "arbitrary_types_allowed": True,
+    }
+
+class StatisticTeamWithTeamResponse(StatisticTeamBase):
+    """
+    Modelo de respuesta para representar una estadística de equipo con información completa del equipo.
+    """
+    id: str = Field(alias="_id")
+    team: Optional[TeamResponse] = None
+
+    @field_validator("id", mode="before")
+    @classmethod
+    def validate_id(cls, v):
+        """
+        Valida y transforma el ObjectId en un string antes de la serialización.
         """
         if isinstance(v, ObjectId):
             return str(v)

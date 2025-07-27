@@ -1,7 +1,9 @@
 from fastapi import APIRouter, HTTPException, status
 from typing import List
 from app.models.competition import Competition
-from app.schemas.competition_schema import CompetitionCreate, CompetitionUpdate, CompetitionResponse
+from app.models.team import Team
+from app.schemas.competition_schema import CompetitionCreate, CompetitionUpdate, CompetitionResponse, CompetitionWithTeamsResponse
+from app.schemas.team_schema import TeamResponse
 from beanie import PydanticObjectId
 from app.services.table_rating_service import table_rating_service
 from app.schemas.table_rating_schema import TableRatingCreate
@@ -63,6 +65,42 @@ async def get_competition(competition_id: PydanticObjectId):
     if not competition:
         raise HTTPException(status_code=404, detail="Competition not found")
     return CompetitionResponse(**competition.dict())
+
+@router.get("/{competition_id}/with-teams", response_model=CompetitionWithTeamsResponse)
+async def get_competition_with_teams(competition_id: PydanticObjectId):
+    """
+    Obtiene la información de una competición específica con información completa de los equipos.
+
+    Args:
+        competition_id (PydanticObjectId): ID de la competición.
+    Returns:
+        CompetitionWithTeamsResponse: Información de la competición con datos completos de equipos.
+    """
+    competition = await Competition.get(competition_id)
+    if not competition:
+        raise HTTPException(status_code=404, detail="Competition not found")
+    
+    # Obtener información completa de los equipos
+    teams_data = []
+    for team_id in competition.id_team:
+        team = await Team.get(team_id)
+        if team:
+            team_response = TeamResponse(
+                id=str(team.id),
+                name=team.name,
+                description=team.description,
+                founded=team.founded,
+                athletes=[str(athlete_id) for athlete_id in team.athletes]
+            )
+            teams_data.append(team_response)
+    
+    return CompetitionWithTeamsResponse(
+        id=str(competition.id),
+        name=competition.name,
+        start_date=competition.start_date,
+        end_date=competition.end_date,
+        teams=teams_data
+    )
 
 @router.put("/{competition_id}", response_model=CompetitionResponse)
 async def update_competition(competition_id: PydanticObjectId, competition: CompetitionUpdate):

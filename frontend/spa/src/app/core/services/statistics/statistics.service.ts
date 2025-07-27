@@ -37,6 +37,31 @@ export interface CompetitionUpdate {
     id_team?: string[];
 }
 
+// Interface para competición con información completa de equipos
+export interface CompetitionWithTeams {
+    id?: string;
+    _id?: string;
+    name: string;
+    start_date?: Date | string;
+    end_date?: Date | string;
+    teams: Team[];
+}
+
+// Interface para estadísticas de equipo con información del equipo
+export interface TeamStatisticsWithInfo {
+    description?: string;
+    date_generation?: Date | string;
+    value?: number;
+    games_played?: number;
+    matches_drawn?: number;
+    matches_lost?: number;
+    matches_won?: number;
+    points?: number;
+    id_team: string;
+    _id: string;
+    team: Team;
+}
+
 // Interfaces para Teams (CRUD)
 export interface Team {
     id?: string;
@@ -228,6 +253,13 @@ export class StatisticsService {
         return this.http
             .get<ApiResponse<StatisticsTeam>>(`${this.teamsUrl}/${teamId}`)
             .pipe(map((response) => response.data));
+    }
+
+    /**
+     * Obtiene las estadísticas de un equipo con información completa del equipo
+     */
+    getTeamStatisticsWithInfo(teamId: string): Observable<TeamStatisticsWithInfo> {
+        return this.http.get<TeamStatisticsWithInfo>(`${this.teamsUrl}/by-team/${teamId}/with-team-info`);
     }
 
     /**
@@ -560,6 +592,13 @@ export class StatisticsService {
      */
     getCompetition(competitionId: string): Observable<Competition> {
         return this.http.get<Competition>(`${this.competitionsApiUrl}/${competitionId}`);
+    }
+
+    /**
+     * Obtiene una competición por ID con información completa de los equipos
+     */
+    getCompetitionWithTeams(competitionId: string): Observable<CompetitionWithTeams> {
+        return this.http.get<CompetitionWithTeams>(`${this.competitionsApiUrl}/${competitionId}/with-teams`);
     }
 
     /**

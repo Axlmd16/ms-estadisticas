@@ -1,15 +1,19 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatButtonModule } from '@angular/material/button';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDatepickerModule } from '@angular/material/datepicker';
 import { MatNativeDateModule } from '@angular/material/core';
-import { MatButtonModule } from '@angular/material/button';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { Inject } from '@angular/core';
 
-import { StatisticsService, Season, SeasonCreate, SeasonUpdate } from '../../../../../core/services/statistics/statistics.service';
+import { StatisticsService } from '../../../../../core/services/statistics/statistics.service';
+import { StatisticsSeason } from '../../../../../core/models/statistics';
 
 @Component({
     selector: 'app-temporada-form',
@@ -20,166 +24,218 @@ import { StatisticsService, Season, SeasonCreate, SeasonUpdate } from '../../../
         MatDialogModule,
         MatFormFieldModule,
         MatInputModule,
+        MatButtonModule,
+        MatIconModule,
+        MatProgressSpinnerModule,
+        MatSnackBarModule,
         MatDatepickerModule,
         MatNativeDateModule,
-        MatButtonModule,
-        MatSnackBarModule,
     ],
     template: `
-        <h2 mat-dialog-title>{{ isEditing ? 'Editar' : 'Crear' }} Temporada</h2>
-        
-        <form [formGroup]="seasonForm" (ngSubmit)="onSubmit()">
-            <mat-dialog-content>
-                <div class="form-container">
-                    <mat-form-field appearance="outline" class="full-width">
-                        <mat-label>Nombre de la Temporada</mat-label>
-                        <input matInput formControlName="name" required>
-                        <mat-error *ngIf="seasonForm.get('name')?.hasError('required')">
-                            El nombre es requerido
-                        </mat-error>
-                    </mat-form-field>
+        <div class="temporada-form">
+            <h2 mat-dialog-title>
+                {{ isEditMode ? 'Editar' : 'Crear' }} Estadísticas de Temporada
+            </h2>
 
-                    <mat-form-field appearance="outline" class="full-width">
-                        <mat-label>Descripción</mat-label>
-                        <textarea matInput formControlName="description" rows="3" required></textarea>
-                        <mat-error *ngIf="seasonForm.get('description')?.hasError('required')">
-                            La descripción es requerida
-                        </mat-error>
-                    </mat-form-field>
+            <div mat-dialog-content>
+                <form [formGroup]="temporadaForm" class="form-container">
+                    <div class="form-row">
+                        <mat-form-field appearance="outline" class="full-width">
+                            <mat-label>Nombre de la Temporada</mat-label>
+                            <input matInput formControlName="seasonName" />
+                            <mat-error *ngIf="temporadaForm.get('seasonName')?.hasError('required')">
+                                El nombre es requerido
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
 
-                    <mat-form-field appearance="outline" class="full-width">
-                        <mat-label>Fecha de Inicio</mat-label>
-                        <input matInput [matDatepicker]="startPicker" formControlName="startDate" required>
-                        <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
-                        <mat-datepicker #startPicker></mat-datepicker>
-                        <mat-error *ngIf="seasonForm.get('startDate')?.hasError('required')">
-                            La fecha de inicio es requerida
-                        </mat-error>
-                    </mat-form-field>
+                    <div class="form-row">
+                        <mat-form-field appearance="outline" class="half-width">
+                            <mat-label>Total de Partidos</mat-label>
+                            <input matInput type="number" formControlName="total_matches" />
+                        </mat-form-field>
 
-                    <mat-form-field appearance="outline" class="full-width">
-                        <mat-label>Fecha de Fin</mat-label>
-                        <input matInput [matDatepicker]="endPicker" formControlName="endDate" required>
-                        <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
-                        <mat-datepicker #endPicker></mat-datepicker>
-                        <mat-error *ngIf="seasonForm.get('endDate')?.hasError('required')">
-                            La fecha de fin es requerida
-                        </mat-error>
-                        <mat-error *ngIf="seasonForm.get('endDate')?.hasError('dateRange')">
-                            La fecha de fin debe ser posterior a la fecha de inicio
-                        </mat-error>
-                    </mat-form-field>
-                </div>
-            </mat-dialog-content>
+                        <mat-form-field appearance="outline" class="half-width">
+                            <mat-label>Total de Goles</mat-label>
+                            <input matInput type="number" formControlName="total_goals" />
+                        </mat-form-field>
+                    </div>
 
-            <mat-dialog-actions align="end">
-                <button mat-button type="button" (click)="onCancel()">
+                    <div class="form-row">
+                        <mat-form-field appearance="outline" class="full-width">
+                            <mat-label>Promedio de Goles por Partido</mat-label>
+                            <input matInput type="number" step="0.01" formControlName="goals_per_match" />
+                        </mat-form-field>
+                    </div>
+
+                    <div class="form-row">
+                        <mat-form-field appearance="outline" class="half-width">
+                            <mat-label>Mayor Victoria</mat-label>
+                            <input matInput formControlName="biggest_win" />
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="half-width">
+                            <mat-label>Mayor Derrota</mat-label>
+                            <input matInput formControlName="biggest_loss" />
+                        </mat-form-field>
+                    </div>
+
+                    <div class="form-row">
+                        <mat-form-field appearance="outline" class="half-width">
+                            <mat-label>Fecha de Inicio</mat-label>
+                            <input matInput [matDatepicker]="startPicker" formControlName="startDate">
+                            <mat-datepicker-toggle matSuffix [for]="startPicker"></mat-datepicker-toggle>
+                            <mat-datepicker #startPicker></mat-datepicker>
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="half-width">
+                            <mat-label>Fecha de Fin</mat-label>
+                            <input matInput [matDatepicker]="endPicker" formControlName="endDate">
+                            <mat-datepicker-toggle matSuffix [for]="endPicker"></mat-datepicker-toggle>
+                            <mat-datepicker #endPicker></mat-datepicker>
+                        </mat-form-field>
+                    </div>
+                </form>
+            </div>
+
+            <div mat-dialog-actions align="end">
+                <button mat-button (click)="onCancel()" [disabled]="isLoading">
                     Cancelar
                 </button>
-                <button mat-raised-button color="primary" type="submit" 
-                        [disabled]="seasonForm.invalid || isSubmitting">
-                    {{ isSubmitting ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Crear') }}
+                <button
+                    mat-raised-button
+                    color="primary"
+                    (click)="onSave()"
+                    [disabled]="!temporadaForm.valid || isLoading"
+                >
+                    <mat-spinner diameter="20" *ngIf="isLoading"></mat-spinner>
+                    {{ isEditMode ? 'Actualizar' : 'Crear' }}
                 </button>
-            </mat-dialog-actions>
-        </form>
+            </div>
+        </div>
     `,
-    styles: [`
-        .form-container {
-            min-width: 500px;
-            padding: 20px 0;
-        }
+    styles: [
+        `
+            .temporada-form {
+                width: 500px;
+                max-width: 90vw;
+            }
 
-        .full-width {
-            width: 100%;
-            margin-bottom: 16px;
-        }
+            .form-container {
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+                margin: 16px 0;
+            }
 
-        mat-dialog-content {
-            max-height: 60vh;
-            overflow-y: auto;
-        }
-    `]
+            .form-row {
+                display: flex;
+                gap: 16px;
+            }
+
+            .full-width {
+                flex: 1;
+            }
+
+            .half-width {
+                flex: 0.5;
+            }
+
+            mat-spinner {
+                margin-right: 8px;
+            }
+        `,
+    ],
 })
 export class TemporadaFormComponent implements OnInit {
-    seasonForm: FormGroup;
-    isEditing = false;
-    isSubmitting = false;
+    temporadaForm: FormGroup;
+    isLoading = false;
+    isEditMode = false;
 
     constructor(
         private fb: FormBuilder,
         private statisticsService: StatisticsService,
         private snackBar: MatSnackBar,
-        private dialogRef: MatDialogRef<TemporadaFormComponent>,
-        @Inject(MAT_DIALOG_DATA) public data: Season | null
+        public dialogRef: MatDialogRef<TemporadaFormComponent>,
+        @Inject(MAT_DIALOG_DATA) public data: { temporada?: StatisticsSeason }
     ) {
-        this.seasonForm = this.fb.group({
-            name: ['', [Validators.required]],
-            description: ['', [Validators.required]],
-            startDate: ['', [Validators.required]],
-            endDate: ['', [Validators.required]]
-        }, { validators: this.dateRangeValidator });
+        this.temporadaForm = this.createForm();
+        this.isEditMode = !!data?.temporada;
+    }
 
-        if (data) {
-            this.isEditing = true;
-            // Convert date strings to Date objects for the datepicker
-            const formData = {
-                ...data,
-                startDate: new Date(data.startDate),
-                endDate: new Date(data.endDate)
-            };
-            this.seasonForm.patchValue(formData);
+    ngOnInit() {
+        if (this.isEditMode && this.data.temporada) {
+            this.loadTemporadaData();
         }
     }
 
-    ngOnInit() {}
-
-    dateRangeValidator(group: FormGroup) {
-        const startDate = group.get('startDate')?.value;
-        const endDate = group.get('endDate')?.value;
-        
-        if (startDate && endDate && new Date(startDate) >= new Date(endDate)) {
-            group.get('endDate')?.setErrors({ dateRange: true });
-            return { dateRange: true };
-        }
-        
-        if (group.get('endDate')?.hasError('dateRange')) {
-            group.get('endDate')?.setErrors(null);
-        }
-        
-        return null;
+    private createForm(): FormGroup {
+        return this.fb.group({
+            seasonName: ['', [Validators.required]],
+            total_matches: [0, [Validators.min(0)]],
+            total_goals: [0, [Validators.min(0)]],
+            goals_per_match: [0, [Validators.min(0)]],
+            biggest_win: [''],
+            biggest_loss: [''],
+            startDate: [''],
+            endDate: [''],
+        });
     }
 
-    onSubmit() {
-        if (this.seasonForm.valid) {
-            this.isSubmitting = true;
-            const seasonData = {
-                ...this.seasonForm.value,
-                startDate: this.seasonForm.value.startDate.toISOString(),
-                endDate: this.seasonForm.value.endDate.toISOString()
+    private loadTemporadaData() {
+        if (this.data.temporada) {
+            this.temporadaForm.patchValue({
+                seasonName: this.data.temporada.season?.name || '',
+                total_matches: this.data.temporada.total_matches,
+                total_goals: this.data.temporada.total_goals,
+                goals_per_match: this.data.temporada.goals_per_match,
+                biggest_win: this.data.temporada.biggest_win,
+                biggest_loss: this.data.temporada.biggest_loss,
+                startDate: this.data.temporada.season?.start_date ? new Date(this.data.temporada.season.start_date) : '',
+                endDate: this.data.temporada.season?.end_date ? new Date(this.data.temporada.season.end_date) : '',
+            });
+        }
+    }
+
+    onSave() {
+        if (this.temporadaForm.valid) {
+            this.isLoading = true;
+            const temporadaData: StatisticsSeason = {
+                ...this.temporadaForm.value,
+                id: this.isEditMode ? this.data.temporada!.id : '',
+                season: {
+                    id: this.isEditMode ? this.data.temporada!.season?.id || '' : '',
+                    name: this.temporadaForm.value.seasonName,
+                    start_date: this.temporadaForm.value.startDate,
+                    end_date: this.temporadaForm.value.endDate,
+                },
+                created_at: this.isEditMode ? this.data.temporada!.created_at : new Date(),
+                updated_at: new Date(),
             };
 
-            const operation = this.isEditing
-                ? this.statisticsService.updateSeason(this.data!.id || this.data!._id!, seasonData as SeasonUpdate)
-                : this.statisticsService.createSeason(seasonData as SeasonCreate);
+            const operation = this.isEditMode
+                ? this.statisticsService.updateSeasonStatistics(temporadaData.id, temporadaData)
+                : this.statisticsService.createSeasonStatistics(temporadaData);
 
             operation.subscribe({
                 next: (result) => {
+                    this.isLoading = false;
                     this.snackBar.open(
-                        `Temporada ${this.isEditing ? 'actualizada' : 'creada'} exitosamente`,
+                        `Estadísticas de temporada ${this.isEditMode ? 'actualizadas' : 'creadas'} exitosamente`,
                         'Cerrar',
                         { duration: 3000 }
                     );
                     this.dialogRef.close(result);
                 },
                 error: (error) => {
-                    console.error('Error al guardar temporada:', error);
+                    this.isLoading = false;
                     this.snackBar.open(
-                        `Error al ${this.isEditing ? 'actualizar' : 'crear'} temporada`,
+                        `Error al ${this.isEditMode ? 'actualizar' : 'crear'} las estadísticas`,
                         'Cerrar',
                         { duration: 3000 }
                     );
-                    this.isSubmitting = false;
-                }
+                    console.error('Error:', error);
+                },
             });
         }
     }

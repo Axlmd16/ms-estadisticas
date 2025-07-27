@@ -87,29 +87,36 @@ export const routes: Routes = [
                         path: 'equipos',
                         loadComponent: () =>
                             import(
-                                './features/estadisticas/components/equipos/equipos.component'
+                                './feature/estadisticas/components/equipos/equipos.component'
                             ).then((m) => m.EquiposComponent),
                     },
                     {
                         path: 'equipos/:id',
                         loadComponent: () =>
                             import(
-                                './features/estadisticas/components/equipo-detalle/equipo-detalle.component'
+                                './feature/estadisticas/components/equipo-detalle/equipo-detalle.component'
                             ).then((m) => m.EquipoDetalleComponent),
+                    },
+                    {
+                        path: 'equipos/:id/estadisticas',
+                        loadComponent: () =>
+                            import(
+                                './feature/estadisticas/components/equipos/estadisticas-equipo/estadisticas-equipo.component'
+                            ).then((m) => m.EstadisticasEquipoComponent),
                     },
                     // Temporadas
                     {
                         path: 'temporadas',
                         loadComponent: () =>
                             import(
-                                './features/estadisticas/components/temporadas/temporadas.component'
+                                './feature/estadisticas/components/temporadas/temporadas.component'
                             ).then((m) => m.TemporadasComponent),
                     },
                     {
                         path: 'temporadas/:id',
                         loadComponent: () =>
                             import(
-                                './features/estadisticas/components/temporadas/temporada-detalle/temporada-detalle.component'
+                                './feature/estadisticas/components/temporadas/temporada-detalle/temporada-detalle.component'
                             ).then((m) => m.TemporadaDetalleComponent),
                     },
                     // Jugadores
@@ -117,14 +124,14 @@ export const routes: Routes = [
                         path: 'jugadores',
                         loadComponent: () =>
                             import(
-                                './features/estadisticas/components/jugadores/jugadores.component'
+                                './feature/estadisticas/components/jugadores/jugadores.component'
                             ).then((m) => m.JugadoresComponent),
                     },
                     {
                         path: 'jugadores/:id',
                         loadComponent: () =>
                             import(
-                                './features/estadisticas/components/jugadores/jugador-detalle/jugador-detalle.component'
+                                './feature/estadisticas/components/jugadores/jugador-detalle/jugador-detalle.component'
                             ).then((m) => m.JugadorDetalleComponent),
                     },
                     // Competencias
@@ -132,14 +139,14 @@ export const routes: Routes = [
                         path: 'competencias',
                         loadComponent: () =>
                             import(
-                                './features/estadisticas/components/competencias/competencias.component'
+                                './feature/estadisticas/components/competencias/competencias.component'
                             ).then((m) => m.CompetenciasComponent),
                     },
                     {
                         path: 'competencias/:id',
                         loadComponent: () =>
                             import(
-                                './features/estadisticas/components/competencias/competencia-detalle/competencia-detalle.component'
+                                './feature/estadisticas/components/competencias/competencia-detalle/competencia-detalle.component'
                             ).then((m) => m.CompetenciaDetalleComponent),
                     },
                     // Tabla de Posiciones
@@ -147,17 +154,17 @@ export const routes: Routes = [
                         path: 'tabla-posiciones',
                         loadComponent: () =>
                             import(
-                                './features/estadisticas/components/tabla-posiciones/tabla-posiciones.component'
+                                './feature/estadisticas/components/tabla-posiciones/tabla-posiciones.component'
                             ).then((m) => m.TablaPosicionesComponent),
                     },
                     // CRUD de Competiciones
-                    {
-                        path: 'competiciones',
-                        loadComponent: () =>
-                            import(
-                                './feature/estadisticas/components/competiciones/competiciones.component'
-                            ).then((m) => m.CompeticionesComponent),
-                    },
+                    // {
+                    //     path: 'competiciones',
+                    //     loadComponent: () =>
+                    //         import(
+                    //             './feature/estadisticas/components/competiciones/competiciones.component'
+                    //         ).then((m) => m.CompeticionesComponent),
+                    // },
                     // CRUD de Equipos
                     {
                         path: 'equipos-crud',
@@ -167,29 +174,29 @@ export const routes: Routes = [
                             ).then((m) => m.EquiposComponent),
                     },
                     // CRUD de Atletas
-                    {
-                        path: 'atletas',
-                        loadComponent: () =>
-                            import(
-                                './feature/estadisticas/components/atletas/atletas.component'
-                            ).then((m) => m.AtletasComponent),
-                    },
-                    // CRUD de Temporadas
-                    {
-                        path: 'temporadas-crud',
-                        loadComponent: () =>
-                            import(
-                                './feature/estadisticas/components/temporadas/temporada-crud.component'
-                            ).then((m) => m.TemporadaCrudComponent),
-                    },
-                    // CRUD de Partidos
-                    {
-                        path: 'partidos',
-                        loadComponent: () =>
-                            import(
-                                './feature/estadisticas/components/partidos/partidos.component'
-                            ).then((m) => m.PartidosComponent),
-                    },
+                    // {
+                    //     path: 'atletas',
+                    //     loadComponent: () =>
+                    //         import(
+                    //             './feature/estadisticas/components/atletas/atletas.component'
+                    //         ).then((m) => m.AtletasComponent),
+                    // },
+                    // // CRUD de Temporadas
+                    // {
+                    //     path: 'temporadas-crud',
+                    //     loadComponent: () =>
+                    //         import(
+                    //             './feature/estadisticas/components/temporadas/temporada-crud.component'
+                    //         ).then((m) => m.TemporadaCrudComponent),
+                    // },
+                    // // CRUD de Partidos
+                    // {
+                    //     path: 'partidos',
+                    //     loadComponent: () =>
+                    //         import(
+                    //             './feature/estadisticas/components/partidos/partidos.component'
+                    //         ).then((m) => m.PartidosComponent),
+                    // },
                 ],
             },
 

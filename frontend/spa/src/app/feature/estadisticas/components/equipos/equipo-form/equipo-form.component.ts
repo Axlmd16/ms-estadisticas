@@ -1,13 +1,17 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { MatDialogModule, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { MatDialogRef, MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import { MatSnackBarModule, MatSnackBar } from '@angular/material/snack-bar';
+import { MatIconModule } from '@angular/material/icon';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { Inject } from '@angular/core';
 
-import { StatisticsService, Team, TeamCreate, TeamUpdate } from '../../../../../core/services/statistics/statistics.service';
+import { StatisticsService } from '../../../../../core/services/statistics/statistics.service';
+import { StatisticsTeam } from '../../../../../core/models/statistics';
 
 @Component({
     selector: 'app-equipo-form',
@@ -19,125 +23,215 @@ import { StatisticsService, Team, TeamCreate, TeamUpdate } from '../../../../../
         MatFormFieldModule,
         MatInputModule,
         MatButtonModule,
+        MatIconModule,
+        MatProgressSpinnerModule,
         MatSnackBarModule,
     ],
     template: `
-        <h2 mat-dialog-title>{{ isEditing ? 'Editar' : 'Crear' }} Equipo</h2>
-        
-        <form [formGroup]="teamForm" (ngSubmit)="onSubmit()">
-            <mat-dialog-content>
-                <div class="form-container">
-                    <mat-form-field appearance="outline" class="full-width">
-                        <mat-label>Nombre del Equipo</mat-label>
-                        <input matInput formControlName="name" required>
-                        <mat-error *ngIf="teamForm.get('name')?.hasError('required')">
-                            El nombre es requerido
-                        </mat-error>
-                    </mat-form-field>
+        <div class="equipo-form">
+            <h2 mat-dialog-title>
+                {{ isEditMode ? 'Editar' : 'Crear' }} Estadísticas de Equipo
+            </h2>
 
-                    <mat-form-field appearance="outline" class="full-width">
-                        <mat-label>Descripción</mat-label>
-                        <textarea matInput formControlName="description" rows="3"></textarea>
-                    </mat-form-field>
+            <div mat-dialog-content>
+                <form [formGroup]="equipoForm" class="form-container">
+                    <div class="form-row">
+                        <mat-form-field appearance="outline" class="full-width">
+                            <mat-label>Nombre del Equipo</mat-label>
+                            <input matInput formControlName="name" />
+                            <mat-error *ngIf="equipoForm.get('name')?.hasError('required')">
+                                El nombre es requerido
+                            </mat-error>
+                        </mat-form-field>
+                    </div>
 
-                    <mat-form-field appearance="outline" class="full-width">
-                        <mat-label>Año de Fundación</mat-label>
-                        <input matInput type="number" formControlName="founded" min="1800" max="2024">
-                        <mat-error *ngIf="teamForm.get('founded')?.hasError('min')">
-                            El año debe ser mayor a 1800
-                        </mat-error>
-                        <mat-error *ngIf="teamForm.get('founded')?.hasError('max')">
-                            El año no puede ser mayor al actual
-                        </mat-error>
-                    </mat-form-field>
-                </div>
-            </mat-dialog-content>
+                    <div class="form-row">
+                        <mat-form-field appearance="outline" class="half-width">
+                            <mat-label>Partidos Jugados</mat-label>
+                            <input matInput type="number" formControlName="gamesPlayed" />
+                        </mat-form-field>
 
-            <mat-dialog-actions align="end">
-                <button mat-button type="button" (click)="onCancel()">
+                        <mat-form-field appearance="outline" class="half-width">
+                            <mat-label>Partidos Ganados</mat-label>
+                            <input matInput type="number" formControlName="gamesWon" />
+                        </mat-form-field>
+                    </div>
+
+                    <div class="form-row">
+                        <mat-form-field appearance="outline" class="half-width">
+                            <mat-label>Partidos Empatados</mat-label>
+                            <input matInput type="number" formControlName="gamesTied" />
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="half-width">
+                            <mat-label>Partidos Perdidos</mat-label>
+                            <input matInput type="number" formControlName="gamesLost" />
+                        </mat-form-field>
+                    </div>
+
+                    <div class="form-row">
+                        <mat-form-field appearance="outline" class="half-width">
+                            <mat-label>Goles Anotados</mat-label>
+                            <input matInput type="number" formControlName="goalsScored" />
+                        </mat-form-field>
+
+                        <mat-form-field appearance="outline" class="half-width">
+                            <mat-label>Goles Recibidos</mat-label>
+                            <input matInput type="number" formControlName="goalsAgainst" />
+                        </mat-form-field>
+                    </div>
+
+                    <div class="form-row">
+                        <mat-form-field appearance="outline" class="full-width">
+                            <mat-label>ID de Temporada</mat-label>
+                            <input matInput formControlName="seasonId" />
+                        </mat-form-field>
+                    </div>
+
+                    <div class="form-row">
+                        <mat-form-field appearance="outline" class="full-width">
+                            <mat-label>URL del Logo</mat-label>
+                            <input matInput formControlName="logo" />
+                        </mat-form-field>
+                    </div>
+                </form>
+            </div>
+
+            <div mat-dialog-actions align="end">
+                <button mat-button (click)="onCancel()" [disabled]="isLoading">
                     Cancelar
                 </button>
-                <button mat-raised-button color="primary" type="submit" 
-                        [disabled]="teamForm.invalid || isSubmitting">
-                    {{ isSubmitting ? 'Guardando...' : (isEditing ? 'Actualizar' : 'Crear') }}
+                <button
+                    mat-raised-button
+                    color="primary"
+                    (click)="onSave()"
+                    [disabled]="!equipoForm.valid || isLoading"
+                >
+                    <mat-spinner diameter="20" *ngIf="isLoading"></mat-spinner>
+                    {{ isEditMode ? 'Actualizar' : 'Crear' }}
                 </button>
-            </mat-dialog-actions>
-        </form>
+            </div>
+        </div>
     `,
-    styles: [`
-        .form-container {
-            min-width: 400px;
-            padding: 20px 0;
-        }
+    styles: [
+        `
+            .equipo-form {
+                width: 500px;
+                max-width: 90vw;
+            }
 
-        .full-width {
-            width: 100%;
-            margin-bottom: 16px;
-        }
+            .form-container {
+                display: flex;
+                flex-direction: column;
+                gap: 16px;
+                margin: 16px 0;
+            }
 
-        mat-dialog-content {
-            max-height: 60vh;
-            overflow-y: auto;
-        }
-    `]
+            .form-row {
+                display: flex;
+                gap: 16px;
+            }
+
+            .full-width {
+                flex: 1;
+            }
+
+            .half-width {
+                flex: 0.5;
+            }
+
+            mat-spinner {
+                margin-right: 8px;
+            }
+        `,
+    ],
 })
 export class EquipoFormComponent implements OnInit {
-    teamForm: FormGroup;
-    isEditing = false;
-    isSubmitting = false;
+    equipoForm: FormGroup;
+    isLoading = false;
+    isEditMode = false;
 
     constructor(
         private fb: FormBuilder,
         private statisticsService: StatisticsService,
         private snackBar: MatSnackBar,
-        private dialogRef: MatDialogRef<EquipoFormComponent>,
-        @Inject(MAT_DIALOG_DATA) public data: Team | null
+        public dialogRef: MatDialogRef<EquipoFormComponent>,
+        @Inject(MAT_DIALOG_DATA) public data: { equipo?: StatisticsTeam }
     ) {
-        this.teamForm = this.fb.group({
-            name: ['', [Validators.required]],
-            description: [''],
-            founded: ['', [Validators.min(1800), Validators.max(new Date().getFullYear())]]
-        });
+        this.equipoForm = this.createForm();
+        this.isEditMode = !!data?.equipo;
+    }
 
-        if (data) {
-            this.isEditing = true;
-            this.teamForm.patchValue(data);
+    ngOnInit() {
+        if (this.isEditMode && this.data.equipo) {
+            this.loadEquipoData();
         }
     }
 
-    ngOnInit() {}
+    private createForm(): FormGroup {
+        return this.fb.group({
+            name: ['', [Validators.required]],
+            gamesPlayed: [0, [Validators.min(0)]],
+            gamesWon: [0, [Validators.min(0)]],
+            gamesTied: [0, [Validators.min(0)]],
+            gamesLost: [0, [Validators.min(0)]],
+            goalsScored: [0, [Validators.min(0)]],
+            goalsAgainst: [0, [Validators.min(0)]],
+            seasonId: [''],
+            logo: [''],
+        });
+    }
 
-    onSubmit() {
-        if (this.teamForm.valid) {
-            this.isSubmitting = true;
-            const teamData = this.teamForm.value;
+    private loadEquipoData() {
+        if (this.data.equipo) {
+            this.equipoForm.patchValue({
+                name: this.data.equipo.name,
+                gamesPlayed: this.data.equipo.gamesPlayed,
+                gamesWon: this.data.equipo.gamesWon,
+                gamesTied: this.data.equipo.gamesTied,
+                gamesLost: this.data.equipo.gamesLost,
+                goalsScored: this.data.equipo.goalsScored,
+                goalsAgainst: this.data.equipo.goalsAgainst,
+                seasonId: this.data.equipo.seasonId,
+                logo: this.data.equipo.logo,
+            });
+        }
+    }
 
-            // Convert empty strings to null for optional fields
-            if (!teamData.description) teamData.description = null;
-            if (!teamData.founded) teamData.founded = null;
+    onSave() {
+        if (this.equipoForm.valid) {
+            this.isLoading = true;
+            const equipoData: StatisticsTeam = {
+                ...this.equipoForm.value,
+                id: this.isEditMode ? this.data.equipo!.id : '',
+                teamId: this.isEditMode ? this.data.equipo!.teamId : '',
+                createdAt: this.isEditMode ? this.data.equipo!.createdAt : new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
 
-            const operation = this.isEditing
-                ? this.statisticsService.updateTeam(this.data!.id || this.data!._id!, teamData as TeamUpdate)
-                : this.statisticsService.createTeam(teamData as TeamCreate);
+            const operation = this.isEditMode
+                ? this.statisticsService.updateTeamStatistics(equipoData.id, equipoData)
+                : this.statisticsService.createTeamStatistics(equipoData);
 
             operation.subscribe({
                 next: (result) => {
+                    this.isLoading = false;
                     this.snackBar.open(
-                        `Equipo ${this.isEditing ? 'actualizado' : 'creado'} exitosamente`,
+                        `Estadísticas de equipo ${this.isEditMode ? 'actualizadas' : 'creadas'} exitosamente`,
                         'Cerrar',
                         { duration: 3000 }
                     );
                     this.dialogRef.close(result);
                 },
                 error: (error) => {
-                    console.error('Error al guardar equipo:', error);
+                    this.isLoading = false;
                     this.snackBar.open(
-                        `Error al ${this.isEditing ? 'actualizar' : 'crear'} equipo`,
+                        `Error al ${this.isEditMode ? 'actualizar' : 'crear'} las estadísticas`,
                         'Cerrar',
                         { duration: 3000 }
                     );
-                    this.isSubmitting = false;
-                }
+                    console.error('Error:', error);
+                },
             });
         }
     }
