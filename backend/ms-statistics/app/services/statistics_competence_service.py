@@ -124,6 +124,53 @@ class StatisticCompetenceService:
             id_competition=str(stat.id_competition) if stat.id_competition else None,
         )
 
+    async def get_statistic_competence_by_competition(self, competition_id: str) -> StatisticCompetenceResponse:
+        """
+        Obtiene las estadísticas de una competencia específica por el ID de la competencia.
+
+        Args:
+            competition_id (str): ID de la competencia.
+        Returns:
+            StatisticCompetenceResponse: Estadísticas de la competencia encontrada.
+        Raises:
+            HTTPException: Si no se encuentran estadísticas para la competencia.
+        """
+        logger.info(f"Searching statistics for competition_id: {competition_id}")
+        
+        # Buscar estadísticas por ID de competencia como string (así es como están guardados)
+        stat = await self.repo.find_one({"id_competition": competition_id})
+        logger.info(f"Search with string - Found statistics: {stat}")
+        
+        # Si no se encuentra con string, intentar con ObjectId
+        if not stat:
+            try:
+                competition_obj_id = ObjectId(competition_id)
+                stat = await self.repo.find_one({"id_competition": competition_obj_id})
+                logger.info(f"Search with ObjectId - Found statistics: {stat}")
+            except Exception as e:
+                logger.warning(f"Invalid ObjectId format: {competition_id}, error: {e}")
+        
+        logger.info(f"Final result - Found statistics: {stat}")
+        
+        if not stat:
+            logger.warning(f"No statistics found for competition {competition_id}")
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail=f"No statistics found for competition {competition_id}"
+            )
+        
+        return StatisticCompetenceResponse(
+            _id=str(stat.id),
+            description=stat.description,
+            date_generation=stat.date_generation,
+            value=stat.value,
+            average_score=stat.average_score,
+            matches_completed=stat.matches_completed,
+            record_score=stat.record_score,
+            total_parties=stat.total_parties,
+            id_competition=str(stat.id_competition) if stat.id_competition else None,
+        )
+
     async def update_statistic_competence(self, stat_id: PydanticObjectId, stat: StatisticCompetenceUpdate) -> StatisticCompetenceResponse:
         """
         Actualiza los datos de una estadística de competencia existente.

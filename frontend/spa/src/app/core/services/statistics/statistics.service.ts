@@ -465,6 +465,17 @@ export class StatisticsService {
     // ==================== COMPETENCIAS ====================
 
     /**
+     * Obtiene las estadísticas de una competencia por ID de competencia
+     */
+    getCompetitionStatisticsByCompetitionId(
+        competitionId: string
+    ): Observable<StatisticsCompetence> {
+        return this.http.get<StatisticsCompetence>(
+            `http://localhost:8012/api/v1/statistics/competence/by-competition/${competitionId}`
+        );
+    }
+
+    /**
      * Obtiene las estadísticas de una competencia por ID
      */
     getCompetitionStatistics(

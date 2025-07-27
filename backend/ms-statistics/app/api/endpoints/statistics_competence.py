@@ -33,6 +33,18 @@ async def list_statistic_competences():
     """
     return await statistic_competence_service.list_statistic_competences()
 
+@router.get("/by-competition/{competition_id}", response_model=StatisticCompetenceResponse)
+async def get_statistic_competence_by_competition(competition_id: str):
+    """
+    Obtiene las estadísticas de una competencia específica por el ID de la competencia.
+
+    Args:
+        competition_id (str): ID de la competencia.
+    Returns:
+        StatisticCompetenceResponse: Estadísticas de la competencia solicitada.
+    """
+    return await statistic_competence_service.get_statistic_competence_by_competition(competition_id)
+
 @router.get("/{stat_id}", response_model=StatisticCompetenceResponse)
 async def get_statistic_competence(stat_id: PydanticObjectId):
     """

@@ -36,7 +36,7 @@ import type { CompetitionWithTeams } from '../../../../../core/services/statisti
                     <div mat-card-avatar class="competition-avatar">
                         <mat-icon>emoji_events</mat-icon>
                     </div>
-                    <mat-card-title>{{ competenciaCompleta.name || competencia?.competition_name }}</mat-card-title>
+                    <mat-card-title>{{ competenciaCompleta.name || competencia?.description || 'Competencia' }}</mat-card-title>
                     <mat-card-subtitle>
                         Estadísticas detalladas de la competencia
                     </mat-card-subtitle>
@@ -61,7 +61,7 @@ import type { CompetitionWithTeams } from '../../../../../core/services/statisti
                             <mat-icon>groups</mat-icon>
                         </div>
                         <div class="stat-info">
-                            <div class="stat-value">{{ competenciaCompleta.teams?.length || competencia?.total_teams || 0 }}</div>
+                            <div class="stat-value">{{ competenciaCompleta.teams?.length || 0 }}</div>
                             <div class="stat-label">Equipos</div>
                         </div>
                     </mat-card-content>
@@ -73,8 +73,8 @@ import type { CompetitionWithTeams } from '../../../../../core/services/statisti
                             <mat-icon>sports_soccer</mat-icon>
                         </div>
                         <div class="stat-info">
-                            <div class="stat-value">{{ competencia?.total_matches || 0 }}</div>
-                            <div class="stat-label">Partidos</div>
+                            <div class="stat-value">{{ competencia?.total_parties || 0 }}</div>
+                            <div class="stat-label">Total Partidos</div>
                         </div>
                     </mat-card-content>
                 </mat-card>
@@ -85,8 +85,8 @@ import type { CompetitionWithTeams } from '../../../../../core/services/statisti
                             <mat-icon>sports_score</mat-icon>
                         </div>
                         <div class="stat-info">
-                            <div class="stat-value">{{ competencia?.total_goals || 0 }}</div>
-                            <div class="stat-label">Goles</div>
+                            <div class="stat-value">{{ competencia?.matches_completed || 0 }}</div>
+                            <div class="stat-label">Partidos Completados</div>
                         </div>
                     </mat-card-content>
                 </mat-card>
@@ -97,8 +97,8 @@ import type { CompetitionWithTeams } from '../../../../../core/services/statisti
                             <mat-icon>trending_up</mat-icon>
                         </div>
                         <div class="stat-info">
-                            <div class="stat-value">{{ (competencia?.average_goals_per_match || 0) | number:'1.2-2' }}</div>
-                            <div class="stat-label">Promedio Goles/Partido</div>
+                            <div class="stat-value">{{ (competencia?.average_score || 0) | number:'1.2-2' }}</div>
+                            <div class="stat-label">Promedio de Puntos</div>
                         </div>
                     </mat-card-content>
                 </mat-card>
@@ -116,11 +116,11 @@ import type { CompetitionWithTeams } from '../../../../../core/services/statisti
                                 <div class="info-grid">
                                     <div class="info-item">
                                         <strong>Nombre:</strong>
-                                        <span>{{ competenciaCompleta.name || competencia?.competition_name || 'N/A' }}</span>
+                                        <span>{{ competenciaCompleta.name || competencia?.description || 'N/A' }}</span>
                                     </div>
                                     <div class="info-item">
                                         <strong>ID de Competencia:</strong>
-                                        <span>{{ competenciaCompleta.id || competencia?.competition_id || competenciaId }}</span>
+                                        <span>{{ competenciaCompleta.id || competencia?.id_competition || competenciaId }}</span>
                                     </div>
                                     <div class="info-item">
                                         <strong>Fecha de Inicio:</strong>
@@ -132,19 +132,27 @@ import type { CompetitionWithTeams } from '../../../../../core/services/statisti
                                     </div>
                                     <div class="info-item">
                                         <strong>Total de Equipos:</strong>
-                                        <span>{{ competenciaCompleta.teams?.length || competencia?.total_teams || 0 }}</span>
+                                        <span>{{ competenciaCompleta.teams?.length || 0 }}</span>
                                     </div>
-                                    <div class="info-item" *ngIf="competencia?.total_matches">
+                                    <div class="info-item" *ngIf="competencia?.total_parties">
                                         <strong>Total de Partidos:</strong>
-                                        <span>{{ competencia?.total_matches }}</span>
+                                        <span>{{ competencia?.total_parties }}</span>
                                     </div>
-                                    <div class="info-item" *ngIf="competencia?.total_goals">
-                                        <strong>Total de Goles:</strong>
-                                        <span>{{ competencia?.total_goals }}</span>
+                                    <div class="info-item" *ngIf="competencia?.matches_completed">
+                                        <strong>Partidos Completados:</strong>
+                                        <span>{{ competencia?.matches_completed }}</span>
                                     </div>
-                                    <div class="info-item" *ngIf="competencia?.average_goals_per_match">
-                                        <strong>Promedio de Goles:</strong>
-                                        <span>{{ competencia?.average_goals_per_match | number:'1.2-2' }}</span>
+                                    <div class="info-item" *ngIf="competencia?.average_score">
+                                        <strong>Promedio de Puntos:</strong>
+                                        <span>{{ competencia?.average_score | number:'1.2-2' }}</span>
+                                    </div>
+                                    <div class="info-item" *ngIf="competencia?.record_score">
+                                        <strong>Puntuación Récord:</strong>
+                                        <span>{{ competencia?.record_score }}</span>
+                                    </div>
+                                    <div class="info-item" *ngIf="competencia?.date_generation">
+                                        <strong>Última Actualización:</strong>
+                                        <span>{{ competencia?.date_generation | date:'medium' }}</span>
                                     </div>
                                 </div>
                             </mat-card-content>
@@ -162,20 +170,24 @@ import type { CompetitionWithTeams } from '../../../../../core/services/statisti
                                 <div *ngIf="competencia; else noStatsAvailable">
                                     <div class="metrics-grid">
                                         <div class="metric-item">
-                                            <div class="metric-value">{{ competenciaCompleta.teams?.length || competencia?.total_teams || 0 }}</div>
+                                            <div class="metric-value">{{ competenciaCompleta.teams?.length || 0 }}</div>
                                             <div class="metric-label">Equipos Participantes</div>
                                         </div>
                                         <div class="metric-item">
-                                            <div class="metric-value">{{ competencia.total_matches || 0 }}</div>
-                                            <div class="metric-label">Partidos Jugados</div>
+                                            <div class="metric-value">{{ competencia.total_parties || 0 }}</div>
+                                            <div class="metric-label">Total de Partidos</div>
                                         </div>
                                         <div class="metric-item">
-                                            <div class="metric-value">{{ competencia.total_goals || 0 }}</div>
-                                            <div class="metric-label">Total de Goles</div>
+                                            <div class="metric-value">{{ competencia.matches_completed || 0 }}</div>
+                                            <div class="metric-label">Partidos Completados</div>
                                         </div>
                                         <div class="metric-item">
-                                            <div class="metric-value">{{ (competencia.average_goals_per_match || 0) | number:'1.2-2' }}</div>
-                                            <div class="metric-label">Goles por Partido</div>
+                                            <div class="metric-value">{{ (competencia.average_score || 0) | number:'1.2-2' }}</div>
+                                            <div class="metric-label">Promedio de Puntos</div>
+                                        </div>
+                                        <div class="metric-item" *ngIf="competencia.record_score">
+                                            <div class="metric-value">{{ competencia.record_score }}</div>
+                                            <div class="metric-label">Puntuación Récord</div>
                                         </div>
                                     </div>
                                 </div>
@@ -199,31 +211,12 @@ import type { CompetitionWithTeams } from '../../../../../core/services/statisti
                                 <mat-card-title>Estadísticas Disciplinarias</mat-card-title>
                             </mat-card-header>
                             <mat-card-content>
-                                <div *ngIf="competencia; else noDisciplineData">
-                                    <div class="discipline-grid">
-                                        <div class="discipline-item yellow">
-                                            <div class="card-icon">
-                                                <mat-icon>warning</mat-icon>
-                                            </div>
-                                            <div class="card-count">{{ competencia.total_yellow_cards || 0 }}</div>
-                                            <div class="card-label">Tarjetas Amarillas</div>
-                                        </div>
-                                        <div class="discipline-item red">
-                                            <div class="card-icon">
-                                                <mat-icon>error</mat-icon>
-                                            </div>
-                                            <div class="card-count">{{ competencia.total_red_cards || 0 }}</div>
-                                            <div class="card-label">Tarjetas Rojas</div>
-                                        </div>
-                                    </div>
+                                <div class="no-data">
+                                    <mat-icon>gavel</mat-icon>
+                                    <h3>Datos disciplinarios no disponibles</h3>
+                                    <p>Los datos de tarjetas aún no están implementados en este modelo de estadísticas.</p>
+                                    <p>Esta funcionalidad será agregada en futuras versiones.</p>
                                 </div>
-                                <ng-template #noDisciplineData>
-                                    <div class="no-data">
-                                        <mat-icon>gavel</mat-icon>
-                                        <h3>Datos disciplinarios no disponibles</h3>
-                                        <p>Los datos de tarjetas se mostrarán cuando se registren partidos.</p>
-                                    </div>
-                                </ng-template>
                             </mat-card-content>
                         </mat-card>
                     </div>
@@ -873,13 +866,32 @@ export class CompetenciaDetalleComponent implements OnInit {
     }
 
     loadCompetenciaStatistics(competenciaId: string) {
-        this.statisticsService.getCompetitionStatistics(competenciaId).subscribe({
-            next: (competencia) => {
+        console.log('🔍 Iniciando carga de estadísticas para competencia ID:', competenciaId);
+        
+        // Usar el nuevo endpoint que busca por ID de competencia
+        this.statisticsService.getCompetitionStatisticsByCompetitionId(competenciaId).subscribe({
+            next: (competencia: any) => {
+                console.log('✅ Estadísticas de competencia cargadas exitosamente:', competencia);
+                console.log('📊 Estructura real de los datos recibidos:');
+                console.log('- ID:', competencia?._id);
+                console.log('- Description:', competencia?.description);
+                console.log('- ID Competition:', competencia?.id_competition);
+                console.log('- Date Generation:', competencia?.date_generation);
+                console.log('- Value:', competencia?.value);
+                console.log('- Average Score:', competencia?.average_score);
+                console.log('- Matches Completed:', competencia?.matches_completed);
+                console.log('- Record Score:', competencia?.record_score);
+                console.log('- Total Parties:', competencia?.total_parties);
+                console.log('📋 Objeto completo:', competencia);
+                
                 this.competencia = competencia;
-                console.log('Estadísticas de competencia cargadas:', competencia);
             },
             error: (error) => {
-                console.warn('No se pudieron cargar las estadísticas de la competencia:', error);
+                console.error('❌ Error al cargar estadísticas de competencia:', error);
+                console.log('🔧 Status:', error?.status);
+                console.log('🔧 Message:', error?.message);
+                console.log('🔧 Error completo:', error);
+                
                 // No mostramos error ya que las estadísticas pueden no estar disponibles
                 // La información básica se mostrará desde competenciaCompleta
             },
