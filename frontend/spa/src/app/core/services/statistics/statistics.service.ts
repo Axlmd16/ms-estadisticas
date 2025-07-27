@@ -4,8 +4,6 @@ import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
 import {
-    Team,
-    Season,
     StatisticsTeam,
     StatisticsSeason,
     StatisticsIndividual,
@@ -15,6 +13,152 @@ import {
 } from '../../models/statistics';
 import { ApiResponse, ApiPaginationResponse } from '../../models/api-response';
 import { API_ENDPOINTS, ApiUrlBuilder } from '../../config/api-endpoints';
+
+// Interfaces para competiciones (no estadísticas)
+export interface Competition {
+    id?: string;
+    _id?: string;
+    name: string;
+    start_date?: Date | string;
+    end_date?: Date | string;
+    id_team?: string[];
+}
+
+export interface CompetitionCreate {
+    name: string;
+    start_date?: Date | string;
+    end_date?: Date | string;
+}
+
+export interface CompetitionUpdate {
+    name?: string;
+    start_date?: Date | string;
+    end_date?: Date | string;
+    id_team?: string[];
+}
+
+// Interfaces para Teams (CRUD)
+export interface Team {
+    id?: string;
+    _id?: string;
+    name: string;
+    description?: string;
+    founded?: number;
+}
+
+export interface TeamCreate {
+    name: string;
+    description?: string;
+    founded?: number;
+}
+
+export interface TeamUpdate {
+    name?: string;
+    description?: string;
+    founded?: number;
+}
+
+// Interfaces para Athletes/Players (CRUD)
+export interface Athlete {
+    id?: string;
+    _id?: string;
+    name: string;
+    position?: string;
+    team_id?: string;
+}
+
+export interface AthleteCreate {
+    name: string;
+    position?: string;
+    team_id?: string;
+}
+
+export interface AthleteUpdate {
+    name?: string;
+    position?: string;
+    team_id?: string;
+}
+
+// Interfaces para Seasons (CRUD)
+export interface Season {
+    id?: string;
+    _id?: string;
+    name: string;
+    description: string;
+    startDate: Date | string;
+    endDate: Date | string;
+}
+
+export interface SeasonCreate {
+    name: string;
+    description: string;
+    startDate: Date | string;
+    endDate: Date | string;
+}
+
+export interface SeasonUpdate {
+    name?: string;
+    description?: string;
+    startDate?: Date | string;
+    endDate?: Date | string;
+}
+
+// Interfaces para Matches (CRUD)
+export interface Match {
+    id?: string;
+    _id?: string;
+    season_id?: string;
+    local_team_id: string;
+    visitor_team_id: string;
+    date?: Date | string;
+}
+
+export interface MatchCreate {
+    season_id?: string;
+    local_team_id: string;
+    visitor_team_id: string;
+    date?: Date | string;
+}
+
+export interface MatchUpdate {
+    season_id?: string;
+    local_team_id?: string;
+    visitor_team_id?: string;
+    date?: Date | string;
+}
+
+// Interfaces para Results (CRUD)
+export interface Result {
+    id?: string;
+    _id?: string;
+    date_registration?: Date | string;
+    details?: string;
+    loser?: string;
+    score_local?: number;
+    score_visitor?: number;
+    winner?: string;
+    scoreboard_id?: string;
+}
+
+export interface ResultCreate {
+    date_registration?: Date | string;
+    details?: string;
+    loser?: string;
+    score_local?: number;
+    score_visitor?: number;
+    winner?: string;
+    scoreboard_id?: string;
+}
+
+export interface ResultUpdate {
+    date_registration?: Date | string;
+    details?: string;
+    loser?: string;
+    score_local?: number;
+    score_visitor?: number;
+    winner?: string;
+    scoreboard_id?: string;
+}
 
 /**
  * Servicio para gestionar las estadísticas
@@ -33,6 +177,15 @@ export class StatisticsService {
     private competitionsUrl = ApiUrlBuilder.buildUrl(
         API_ENDPOINTS.STATISTICS.COMPETITIONS
     );
+    // URL para endpoints de competiciones (no estadísticas)
+    private competitionsApiUrl = 'http://localhost:8012/api/v1/competitions';
+    
+    // URLs para CRUD operations (direct API endpoints)
+    private teamsApiUrl = 'http://localhost:8012/api/v1/teams';
+    private athletesApiUrl = 'http://localhost:8012/api/v1/athletes';
+    private seasonsApiUrl = 'http://localhost:8012/api/v1/seasons';
+    private matchesApiUrl = 'http://localhost:8012/api/v1/matches';
+    private resultsApiUrl = 'http://localhost:8012/api/v1/results';
 
     constructor(private http: HttpClient) {}
 
@@ -382,5 +535,246 @@ export class StatisticsService {
                 ratings
             )
             .pipe(map((response) => response.data));
+    }
+
+    // ==================== COMPETICIONES (CRUD) ====================
+
+    /**
+     * Crea una nueva competición
+     */
+    createCompetition(competition: CompetitionCreate): Observable<Competition> {
+        return this.http
+            .post<Competition>(this.competitionsApiUrl, competition)
+            .pipe(map((response: any) => response));
+    }
+
+    /**
+     * Obtiene todas las competiciones
+     */
+    getAllCompetitions(): Observable<Competition[]> {
+        return this.http.get<Competition[]>(this.competitionsApiUrl);
+    }
+
+    /**
+     * Obtiene una competición por ID
+     */
+    getCompetition(competitionId: string): Observable<Competition> {
+        return this.http.get<Competition>(`${this.competitionsApiUrl}/${competitionId}`);
+    }
+
+    /**
+     * Actualiza una competición
+     */
+    updateCompetition(competitionId: string, competition: CompetitionUpdate): Observable<Competition> {
+        return this.http
+            .put<Competition>(`${this.competitionsApiUrl}/${competitionId}`, competition);
+    }
+
+    /**
+     * Elimina una competición
+     */
+    deleteCompetition(competitionId: string): Observable<void> {
+        return this.http.delete<void>(`${this.competitionsApiUrl}/${competitionId}`);
+    }
+
+    /**
+     * Agrega un equipo a una competición
+     */
+    addTeamToCompetition(competitionId: string, teamId: string): Observable<Competition> {
+        return this.http
+            .post<Competition>(`${this.competitionsApiUrl}/${competitionId}/add_team/${teamId}`, {});
+    }
+
+    /**
+     * Recalcula las estadísticas de una competición
+     */
+    recalculateCompetitionStatistics(competitionId: string): Observable<Competition> {
+        return this.http
+            .post<Competition>(`${this.competitionsApiUrl}/recalculate/${competitionId}`, {});
+    }
+
+    // ==================== TEAMS (CRUD) ====================
+
+    /**
+     * Crea un nuevo equipo
+     */
+    createTeam(team: TeamCreate): Observable<Team> {
+        return this.http.post<Team>(this.teamsApiUrl, team);
+    }
+
+    /**
+     * Obtiene todos los equipos
+     */
+    getAllTeams(): Observable<Team[]> {
+        return this.http.get<Team[]>(this.teamsApiUrl);
+    }
+
+    /**
+     * Obtiene un equipo por ID
+     */
+    getTeam(teamId: string): Observable<Team> {
+        return this.http.get<Team>(`${this.teamsApiUrl}/${teamId}`);
+    }
+
+    /**
+     * Actualiza un equipo
+     */
+    updateTeam(teamId: string, team: TeamUpdate): Observable<Team> {
+        return this.http.put<Team>(`${this.teamsApiUrl}/${teamId}`, team);
+    }
+
+    /**
+     * Elimina un equipo
+     */
+    deleteTeam(teamId: string): Observable<void> {
+        return this.http.delete<void>(`${this.teamsApiUrl}/${teamId}`);
+    }
+
+    // ==================== ATHLETES (CRUD) ====================
+
+    /**
+     * Crea un nuevo atleta
+     */
+    createAthlete(athlete: AthleteCreate): Observable<Athlete> {
+        return this.http.post<Athlete>(this.athletesApiUrl, athlete);
+    }
+
+    /**
+     * Obtiene todos los atletas
+     */
+    getAllAthletes(): Observable<Athlete[]> {
+        return this.http.get<Athlete[]>(this.athletesApiUrl);
+    }
+
+    /**
+     * Obtiene un atleta por ID
+     */
+    getAthlete(athleteId: string): Observable<Athlete> {
+        return this.http.get<Athlete>(`${this.athletesApiUrl}/${athleteId}`);
+    }
+
+    /**
+     * Actualiza un atleta
+     */
+    updateAthlete(athleteId: string, athlete: AthleteUpdate): Observable<Athlete> {
+        return this.http.put<Athlete>(`${this.athletesApiUrl}/${athleteId}`, athlete);
+    }
+
+    /**
+     * Elimina un atleta
+     */
+    deleteAthlete(athleteId: string): Observable<void> {
+        return this.http.delete<void>(`${this.athletesApiUrl}/${athleteId}`);
+    }
+
+    // ==================== SEASONS (CRUD) ====================
+
+    /**
+     * Crea una nueva temporada
+     */
+    createSeason(season: SeasonCreate): Observable<Season> {
+        return this.http.post<Season>(this.seasonsApiUrl, season);
+    }
+
+    /**
+     * Obtiene todas las temporadas
+     */
+    getAllSeasons(): Observable<Season[]> {
+        return this.http.get<Season[]>(this.seasonsApiUrl);
+    }
+
+    /**
+     * Obtiene una temporada por ID
+     */
+    getSeason(seasonId: string): Observable<Season> {
+        return this.http.get<Season>(`${this.seasonsApiUrl}/${seasonId}`);
+    }
+
+    /**
+     * Actualiza una temporada
+     */
+    updateSeason(seasonId: string, season: SeasonUpdate): Observable<Season> {
+        return this.http.put<Season>(`${this.seasonsApiUrl}/${seasonId}`, season);
+    }
+
+    /**
+     * Elimina una temporada
+     */
+    deleteSeason(seasonId: string): Observable<void> {
+        return this.http.delete<void>(`${this.seasonsApiUrl}/${seasonId}`);
+    }
+
+    // ==================== MATCHES (CRUD) ====================
+
+    /**
+     * Crea un nuevo partido
+     */
+    createMatch(match: MatchCreate): Observable<Match> {
+        return this.http.post<Match>(this.matchesApiUrl, match);
+    }
+
+    /**
+     * Obtiene todos los partidos
+     */
+    getAllMatches(): Observable<Match[]> {
+        return this.http.get<Match[]>(this.matchesApiUrl);
+    }
+
+    /**
+     * Obtiene un partido por ID
+     */
+    getMatch(matchId: string): Observable<Match> {
+        return this.http.get<Match>(`${this.matchesApiUrl}/${matchId}`);
+    }
+
+    /**
+     * Actualiza un partido
+     */
+    updateMatch(matchId: string, match: MatchUpdate): Observable<Match> {
+        return this.http.put<Match>(`${this.matchesApiUrl}/${matchId}`, match);
+    }
+
+    /**
+     * Elimina un partido
+     */
+    deleteMatch(matchId: string): Observable<void> {
+        return this.http.delete<void>(`${this.matchesApiUrl}/${matchId}`);
+    }
+
+    // ==================== RESULTS (CRUD) ====================
+
+    /**
+     * Crea un nuevo resultado
+     */
+    createResult(result: ResultCreate): Observable<Result> {
+        return this.http.post<Result>(this.resultsApiUrl, result);
+    }
+
+    /**
+     * Obtiene todos los resultados
+     */
+    getAllResults(): Observable<Result[]> {
+        return this.http.get<Result[]>(this.resultsApiUrl);
+    }
+
+    /**
+     * Obtiene un resultado por ID
+     */
+    getResult(resultId: string): Observable<Result> {
+        return this.http.get<Result>(`${this.resultsApiUrl}/${resultId}`);
+    }
+
+    /**
+     * Actualiza un resultado
+     */
+    updateResult(resultId: string, result: ResultUpdate): Observable<Result> {
+        return this.http.put<Result>(`${this.resultsApiUrl}/${resultId}`, result);
+    }
+
+    /**
+     * Elimina un resultado
+     */
+    deleteResult(resultId: string): Observable<void> {
+        return this.http.delete<void>(`${this.resultsApiUrl}/${resultId}`);
     }
 }

@@ -569,7 +569,7 @@ export class CompetenciasComponent implements OnInit {
 
     deleteCompetencia(competencia: any) {
         if (confirm(`¿Está seguro de que desea eliminar la competencia "${competencia.name || competencia.competition_name}"?`)) {
-            this.statisticsService.deleteCompetitionStatistics(competencia._id || competencia.id).subscribe({
+            this.statisticsService.deleteCompetition(competencia._id || competencia.id).subscribe({
                 next: () => {
                     this.loadCompetencias();
                     this.snackBar.open('Competencia eliminada exitosamente', 'Cerrar', {

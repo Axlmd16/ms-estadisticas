@@ -584,7 +584,7 @@ export class CompetenciaDetalleComponent implements OnInit {
 
     deleteCompetencia() {
         if (confirm('¿Está seguro de que desea eliminar esta competencia?')) {
-            this.statisticsService.deleteCompetitionStatistics(this.competenciaId).subscribe({
+            this.statisticsService.deleteCompetition(this.competenciaId).subscribe({
                 next: () => {
                     this.snackBar.open('Competencia eliminada exitosamente', 'Cerrar', {
                         duration: 3000,

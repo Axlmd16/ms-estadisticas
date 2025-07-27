@@ -150,6 +150,46 @@ export const routes: Routes = [
                                 './features/estadisticas/components/tabla-posiciones/tabla-posiciones.component'
                             ).then((m) => m.TablaPosicionesComponent),
                     },
+                    // CRUD de Competiciones
+                    {
+                        path: 'competiciones',
+                        loadComponent: () =>
+                            import(
+                                './feature/estadisticas/components/competiciones/competiciones.component'
+                            ).then((m) => m.CompeticionesComponent),
+                    },
+                    // CRUD de Equipos
+                    {
+                        path: 'equipos-crud',
+                        loadComponent: () =>
+                            import(
+                                './feature/estadisticas/components/equipos/equipos.component'
+                            ).then((m) => m.EquiposComponent),
+                    },
+                    // CRUD de Atletas
+                    {
+                        path: 'atletas',
+                        loadComponent: () =>
+                            import(
+                                './feature/estadisticas/components/atletas/atletas.component'
+                            ).then((m) => m.AtletasComponent),
+                    },
+                    // CRUD de Temporadas
+                    {
+                        path: 'temporadas-crud',
+                        loadComponent: () =>
+                            import(
+                                './feature/estadisticas/components/temporadas/temporada-crud.component'
+                            ).then((m) => m.TemporadaCrudComponent),
+                    },
+                    // CRUD de Partidos
+                    {
+                        path: 'partidos',
+                        loadComponent: () =>
+                            import(
+                                './feature/estadisticas/components/partidos/partidos.component'
+                            ).then((m) => m.PartidosComponent),
+                    },
                 ],
             },
 

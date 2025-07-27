@@ -10,8 +10,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { Inject } from '@angular/core';
 
-import { StatisticsService } from '../../../../../core/services/statistics/statistics.service';
-import { StatisticsCompetence } from '../../../../../core/models/statistics';
+import { StatisticsService, CompetitionCreate, Competition } from '../../../../../core/services/statistics/statistics.service';
 
 @Component({
     selector: 'app-competencia-form',
@@ -30,64 +29,30 @@ import { StatisticsCompetence } from '../../../../../core/models/statistics';
     template: `
         <div class="competencia-form">
             <h2 mat-dialog-title>
-                {{ isEditMode ? 'Editar' : 'Crear' }} Estadísticas de Competencia
+                {{ isEditMode ? 'Editar' : 'Crear' }} Competición
             </h2>
 
             <div mat-dialog-content>
                 <form [formGroup]="competenciaForm" class="form-container">
                     <div class="form-row">
                         <mat-form-field appearance="outline" class="full-width">
-                            <mat-label>Nombre de la Competencia</mat-label>
-                            <input matInput formControlName="competition_name" />
-                            <mat-error *ngIf="competenciaForm.get('competition_name')?.hasError('required')">
+                            <mat-label>Nombre de la Competición</mat-label>
+                            <input matInput formControlName="name" />
+                            <mat-error *ngIf="competenciaForm.get('name')?.hasError('required')">
                                 El nombre es requerido
                             </mat-error>
                         </mat-form-field>
                     </div>
 
                     <div class="form-row">
-                        <mat-form-field appearance="outline" class="full-width">
-                            <mat-label>ID de la Competencia</mat-label>
-                            <input matInput formControlName="competition_id" />
-                            <mat-error *ngIf="competenciaForm.get('competition_id')?.hasError('required')">
-                                El ID de la competencia es requerido
-                            </mat-error>
-                        </mat-form-field>
-                    </div>
-
-                    <div class="form-row">
                         <mat-form-field appearance="outline" class="half-width">
-                            <mat-label>Total de Equipos</mat-label>
-                            <input matInput type="number" formControlName="total_teams" />
+                            <mat-label>Fecha de Inicio</mat-label>
+                            <input matInput type="date" formControlName="start_date" />
                         </mat-form-field>
 
                         <mat-form-field appearance="outline" class="half-width">
-                            <mat-label>Total de Partidos</mat-label>
-                            <input matInput type="number" formControlName="total_matches" />
-                        </mat-form-field>
-                    </div>
-
-                    <div class="form-row">
-                        <mat-form-field appearance="outline" class="half-width">
-                            <mat-label>Total de Goles</mat-label>
-                            <input matInput type="number" formControlName="total_goals" />
-                        </mat-form-field>
-
-                        <mat-form-field appearance="outline" class="half-width">
-                            <mat-label>Promedio de Goles por Partido</mat-label>
-                            <input matInput type="number" step="0.01" formControlName="average_goals_per_match" />
-                        </mat-form-field>
-                    </div>
-
-                    <div class="form-row">
-                        <mat-form-field appearance="outline" class="half-width">
-                            <mat-label>Total de Tarjetas Amarillas</mat-label>
-                            <input matInput type="number" formControlName="total_yellow_cards" />
-                        </mat-form-field>
-
-                        <mat-form-field appearance="outline" class="half-width">
-                            <mat-label>Total de Tarjetas Rojas</mat-label>
-                            <input matInput type="number" formControlName="total_red_cards" />
+                            <mat-label>Fecha de Fin</mat-label>
+                            <input matInput type="date" formControlName="end_date" />
                         </mat-form-field>
                     </div>
                 </form>
@@ -152,7 +117,7 @@ export class CompetenciaFormComponent implements OnInit {
         private statisticsService: StatisticsService,
         private snackBar: MatSnackBar,
         public dialogRef: MatDialogRef<CompetenciaFormComponent>,
-        @Inject(MAT_DIALOG_DATA) public data: { competencia?: StatisticsCompetence }
+        @Inject(MAT_DIALOG_DATA) public data: { competencia?: Competition }
     ) {
         this.competenciaForm = this.createForm();
         this.isEditMode = !!data?.competencia;
@@ -166,28 +131,20 @@ export class CompetenciaFormComponent implements OnInit {
 
     private createForm(): FormGroup {
         return this.fb.group({
-            competition_name: ['', [Validators.required]],
-            competition_id: ['', [Validators.required]],
-            total_teams: [0, [Validators.min(0)]],
-            total_matches: [0, [Validators.min(0)]],
-            total_goals: [0, [Validators.min(0)]],
-            average_goals_per_match: [0, [Validators.min(0)]],
-            total_yellow_cards: [0, [Validators.min(0)]],
-            total_red_cards: [0, [Validators.min(0)]],
+            name: ['', [Validators.required]],
+            start_date: [''],
+            end_date: [''],
         });
     }
 
     private loadCompetenciaData() {
         if (this.data.competencia) {
             this.competenciaForm.patchValue({
-                competition_name: this.data.competencia.competition_name,
-                competition_id: this.data.competencia.competition_id,
-                total_teams: this.data.competencia.total_teams,
-                total_matches: this.data.competencia.total_matches,
-                total_goals: this.data.competencia.total_goals,
-                average_goals_per_match: this.data.competencia.average_goals_per_match,
-                total_yellow_cards: this.data.competencia.total_yellow_cards,
-                total_red_cards: this.data.competencia.total_red_cards,
+                name: this.data.competencia.name,
+                start_date: this.data.competencia.start_date ? 
+                    new Date(this.data.competencia.start_date).toISOString().split('T')[0] : '',
+                end_date: this.data.competencia.end_date ? 
+                    new Date(this.data.competencia.end_date).toISOString().split('T')[0] : '',
             });
         }
     }
@@ -195,22 +152,21 @@ export class CompetenciaFormComponent implements OnInit {
     onSave() {
         if (this.competenciaForm.valid) {
             this.isLoading = true;
-            const competenciaData: StatisticsCompetence = {
-                ...this.competenciaForm.value,
-                id: this.isEditMode ? this.data.competencia!.id : '',
-                created_at: this.isEditMode ? this.data.competencia!.created_at : new Date(),
-                updated_at: new Date(),
+            const competenciaData: CompetitionCreate = {
+                name: this.competenciaForm.value.name,
+                start_date: this.competenciaForm.value.start_date || undefined,
+                end_date: this.competenciaForm.value.end_date || undefined,
             };
 
             const operation = this.isEditMode
-                ? this.statisticsService.updateCompetitionStatistics(competenciaData.id, competenciaData)
-                : this.statisticsService.createCompetitionStatistics(competenciaData);
+                ? this.statisticsService.updateCompetition(this.data.competencia!.id || this.data.competencia!._id!, competenciaData)
+                : this.statisticsService.createCompetition(competenciaData);
 
             operation.subscribe({
                 next: (result) => {
                     this.isLoading = false;
                     this.snackBar.open(
-                        `Estadísticas de competencia ${this.isEditMode ? 'actualizadas' : 'creadas'} exitosamente`,
+                        `Competición ${this.isEditMode ? 'actualizada' : 'creada'} exitosamente`,
                         'Cerrar',
                         { duration: 3000 }
                     );
@@ -219,7 +175,7 @@ export class CompetenciaFormComponent implements OnInit {
                 error: (error) => {
                     this.isLoading = false;
                     this.snackBar.open(
-                        `Error al ${this.isEditMode ? 'actualizar' : 'crear'} las estadísticas`,
+                        `Error al ${this.isEditMode ? 'actualizar' : 'crear'} la competición`,
                         'Cerrar',
                         { duration: 3000 }
                     );
