@@ -4,10 +4,11 @@ Incluye modelos base, de creación y actualización para la entidad StatisticTea
 """
 
 from pydantic import BaseModel, Field, field_validator
-from typing import Optional
+from typing import Optional, List
 from bson import ObjectId
 from datetime import datetime
 from app.schemas.team_schema import TeamResponse
+from app.schemas.athlete_schema import AthleteResponse
 
 class StatisticTeamBase(BaseModel):
     """
@@ -79,10 +80,11 @@ class StatisticTeamResponse(StatisticTeamBase):
 
 class StatisticTeamWithTeamResponse(StatisticTeamBase):
     """
-    Modelo de respuesta para representar una estadística de equipo con información completa del equipo.
+    Modelo de respuesta para representar una estadística de equipo con información completa del equipo y atletas.
     """
     id: str = Field(alias="_id")
     team: Optional[TeamResponse] = None
+    athletes: Optional[List[AthleteResponse]] = []
 
     @field_validator("id", mode="before")
     @classmethod

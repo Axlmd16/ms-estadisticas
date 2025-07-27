@@ -11,6 +11,7 @@ from bson import ObjectId
 
 from app.repositories.statistics_team_repository import StatisticTeamRepository
 from app.repositories.team_repository import TeamRepository
+from app.repositories.athlete_repository import AthleteRepository
 from app.schemas.statistics_team_schema import (
     StatisticTeamCreate,
     StatisticTeamUpdate,
@@ -18,6 +19,7 @@ from app.schemas.statistics_team_schema import (
     StatisticTeamWithTeamResponse,
 )
 from app.schemas.team_schema import TeamResponse
+from app.schemas.athlete_schema import AthleteResponse
 
 logger = logging.getLogger(__name__)
 
@@ -27,10 +29,11 @@ class StatisticTeamService:
     """
     def __init__(self):
         """
-        Inicializa el servicio con una instancia del repositorio de estadísticas de equipo y equipos.
+        Inicializa el servicio con una instancia del repositorio de estadísticas de equipo, equipos y atletas.
         """
         self.repo = StatisticTeamRepository()
         self.team_repo = TeamRepository()
+        self.athlete_repo = AthleteRepository()
 
     def _convert_string_ids_to_objectid(self, data: dict) -> dict:
         """
@@ -314,7 +317,7 @@ class StatisticTeamService:
         Args:
             team_id (str): ID del equipo.
         Returns:
-            StatisticTeamWithTeamResponse: Estadística de equipo con información del equipo.
+            StatisticTeamWithTeamResponse: Estadística de equipo con información del equipo y atletas.
         Raises:
             HTTPException: Si no se encuentran estadísticas para el equipo.
         """
@@ -352,6 +355,20 @@ class StatisticTeamService:
                 detail=f"Team {team_id} not found"
             )
         
+        # Obtener atletas del equipo
+        athletes = await self.athlete_repo.find_by_team_id(team_id)
+        logger.info(f"Found {len(athletes)} athletes for team {team_id}")
+        
+        # Convertir atletas a formato de respuesta
+        athletes_response = [
+            AthleteResponse(
+                id=str(athlete.id),
+                name=athlete.name,
+                position=athlete.position,
+                team_id=str(athlete.team_id) if athlete.team_id else None
+            ) for athlete in athletes
+        ]
+        
         team_info = TeamResponse(
             id=str(team.id),
             name=team.name,
@@ -371,7 +388,8 @@ class StatisticTeamService:
             matches_won=stat.matches_won,
             points=stat.points,
             id_team=str(stat.id_team) if stat.id_team else None,
-            team=team_info
+            team=team_info,
+            athletes=athletes_response
         )
 
 statistic_team_service = StatisticTeamService()

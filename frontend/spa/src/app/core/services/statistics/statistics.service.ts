@@ -60,6 +60,7 @@ export interface TeamStatisticsWithInfo {
     id_team: string;
     _id: string;
     team: Team;
+    athletes?: Athlete[]; // Array de atletas del equipo
 }
 
 // Interfaces para Teams (CRUD)
