@@ -131,9 +131,16 @@ export const routes: Routes = [
                         path: 'jugadores/:id',
                         loadComponent: () =>
                             import(
-                                './feature/estadisticas/components/jugadores/jugador-detalle/jugador-detalle.component'
+                                './feature/estadisticas/components/jugadores/jugador-estadisticas/jugador-estadisticas.component'
                             ).then((m) => m.JugadorDetalleComponent),
                     },
+                    // {
+                    //     path: 'jugadores/:id/estadisticas',
+                    //     loadComponent: () =>
+                    //         import(
+                    //             './feature/estadisticas/components/jugadores/estadisticas-athlete/estadisticas-athlete.component'
+                    //         ).then((m) => m.EstadisticasAthleteComponent),
+                    // },
                     // Competencias
                     {
                         path: 'competencias',
@@ -146,7 +153,7 @@ export const routes: Routes = [
                         path: 'competencias/:id',
                         loadComponent: () =>
                             import(
-                                './feature/estadisticas/components/competencias/competencia-detalle/competencia-detalle.component'
+                                './feature/estadisticas/components/competencias/competencia-estadisticas/competencia-estadisticas.component'
                             ).then((m) => m.CompetenciaDetalleComponent),
                     },
                     // Tabla de Posiciones

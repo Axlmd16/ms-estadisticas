@@ -28,14 +28,14 @@ import { StatisticsService, StatisticsIndividualWithAthlete } from '../../../../
         <div class="athlete-stats-container">
             <!-- Header con botón de regreso -->
             <mat-card class="header-card">
-                <mat-card-content>
-                    <div class="header-actions">
-                        <button mat-button (click)="goBack()" class="back-button">
+                <div class="header-actions">
+                    <button mat-raised-button (click)="goBack()" class="back-button">
+                        <span class="button-content">
                             <mat-icon>arrow_back</mat-icon>
-                            Volver a Atletas
-                        </button>
-                    </div>
-                </mat-card-content>
+                            <span class="button-text">Volver a Atletas</span>
+                        </span>
+                    </button>
+                </div>
             </mat-card>
 
             <!-- Loading -->
@@ -72,108 +72,33 @@ import { StatisticsService, StatisticsIndividualWithAthlete } from '../../../../
                     </mat-card-content>
                 </mat-card>
 
-                <!-- Estadísticas principales -->
+                <!-- Estadísticas principales - Solo datos del backend -->
                 <div class="stats-grid">
-                    <!-- Goles -->
-                    <mat-card class="stat-card goals-card">
+                    <!-- Mostrar solo los campos que realmente vienen del backend -->
+                    <mat-card class="stat-card" *ngFor="let field of getBackendFields(); let i = index">
                         <mat-card-content>
                             <div class="stat-content">
-                                <mat-icon class="stat-icon">sports_soccer</mat-icon>
+                                <mat-icon class="stat-icon">{{ getIconForField(field.key) }}</mat-icon>
                                 <div class="stat-info">
-                                    <div class="stat-value">{{ athleteStatistics.goals }}</div>
-                                    <div class="stat-label">Goles</div>
-                                </div>
-                            </div>
-                        </mat-card-content>
-                    </mat-card>
-
-                    <!-- Asistencias -->
-                    <mat-card class="stat-card assists-card">
-                        <mat-card-content>
-                            <div class="stat-content">
-                                <mat-icon class="stat-icon">assist</mat-icon>
-                                <div class="stat-info">
-                                    <div class="stat-value">{{ athleteStatistics.assists }}</div>
-                                    <div class="stat-label">Asistencias</div>
-                                </div>
-                            </div>
-                        </mat-card-content>
-                    </mat-card>
-
-                    <!-- Minutos jugados -->
-                    <mat-card class="stat-card minutes-card">
-                        <mat-card-content>
-                            <div class="stat-content">
-                                <mat-icon class="stat-icon">schedule</mat-icon>
-                                <div class="stat-info">
-                                    <div class="stat-value">{{ athleteStatistics.minutes_played }}</div>
-                                    <div class="stat-label">Minutos</div>
-                                </div>
-                            </div>
-                        </mat-card-content>
-                    </mat-card>
-
-                    <!-- Tarjetas amarillas -->
-                    <mat-card class="stat-card yellow-card">
-                        <mat-card-content>
-                            <div class="stat-content">
-                                <mat-icon class="stat-icon yellow">warning</mat-icon>
-                                <div class="stat-info">
-                                    <div class="stat-value">{{ athleteStatistics.yellow_cards }}</div>
-                                    <div class="stat-label">Tarjetas Amarillas</div>
-                                </div>
-                            </div>
-                        </mat-card-content>
-                    </mat-card>
-
-                    <!-- Tarjetas rojas -->
-                    <mat-card class="stat-card red-card">
-                        <mat-card-content>
-                            <div class="stat-content">
-                                <mat-icon class="stat-icon red">block</mat-icon>
-                                <div class="stat-info">
-                                    <div class="stat-value">{{ athleteStatistics.red_cards }}</div>
-                                    <div class="stat-label">Tarjetas Rojas</div>
-                                </div>
-                            </div>
-                        </mat-card-content>
-                    </mat-card>
-
-                    <!-- Partidos jugados -->
-                    <mat-card class="stat-card matches-card">
-                        <mat-card-content>
-                            <div class="stat-content">
-                                <mat-icon class="stat-icon">sports</mat-icon>
-                                <div class="stat-info">
-                                    <div class="stat-value">{{ athleteStatistics.matches_played }}</div>
-                                    <div class="stat-label">Partidos</div>
+                                    <div class="stat-value">{{ field.value }}</div>
+                                    <div class="stat-label">{{ getFieldLabel(field.key) }}</div>
                                 </div>
                             </div>
                         </mat-card-content>
                     </mat-card>
                 </div>
 
-                <!-- Información adicional -->
-                <mat-card class="additional-info-card">
-                    <mat-card-content>
-                        <h3>Información Adicional</h3>
-                        <mat-divider></mat-divider>
-                        <div class="info-grid">
-                            <div class="info-item">
-                                <strong>ID del Atleta:</strong>
-                                <span>{{ athleteStatistics.athlete.id || athleteStatistics.athlete._id }}</span>
+                <!-- Mensaje cuando no hay estadísticas -->
+                <div class="no-stats-message" *ngIf="getBackendFields().length === 0">
+                    <mat-card>
+                        <mat-card-content>
+                            <div class="no-stats-content">
+                                <mat-icon>info</mat-icon>
+                                <h3>Sin estadísticas disponibles</h3>
+                                <p>Este atleta aún no tiene estadísticas registradas.</p>
                             </div>
-                            <div class="info-item">
-                                <strong>Posición:</strong>
-                                <span>{{ athleteStatistics?.athlete?.position || 'No especificada' }}</span>
-                            </div>
-                            <div class="info-item">
-                                <strong>Equipo:</strong>
-                                <span>{{ athleteStatistics?.athlete?.team_id || 'No asignado' }}</span>
-                            </div>
-                        </div>
-                    </mat-card-content>
-                </mat-card>
+                        </mat-card-content>
+                    </mat-card>
             </div>
 
             <!-- Error state -->
@@ -203,18 +128,61 @@ import { StatisticsService, StatisticsIndividualWithAthlete } from '../../../../
 
             .header-card {
                 margin-bottom: 24px;
+                border-radius: 12px;
+                box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+                background: white;
             }
 
             .header-actions {
                 display: flex;
-                justify-content: space-between;
+                justify-content: flex-start;
                 align-items: center;
+                padding: 16px;
             }
 
             .back-button {
-                display: flex;
-                align-items: center;
-                gap: 8px;
+                background: linear-gradient(135deg, #2196f3 0%, #1976d2 100%) !important;
+                color: white !important;
+                border: none !important;
+                border-radius: 8px !important;
+                transition: all 0.3s ease !important;
+                padding: 0 !important;
+                min-width: auto !important;
+                height: auto !important;
+                line-height: normal !important;
+            }
+
+            .back-button:hover {
+                background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%) !important;
+                transform: translateY(-2px);
+                box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3) !important;
+            }
+
+            .button-content {
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                gap: 8px !important;
+                padding: 12px 20px !important;
+                font-size: 14px !important;
+                font-weight: 500 !important;
+                white-space: nowrap !important;
+            }
+
+            .button-content mat-icon {
+                font-size: 18px !important;
+                width: 18px !important;
+                height: 18px !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                line-height: 1 !important;
+            }
+
+            .button-text {
+                display: inline-block !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                line-height: 1 !important;
             }
 
             .athlete-info-card {
@@ -250,32 +218,60 @@ import { StatisticsService, StatisticsIndividualWithAthlete } from '../../../../
 
             .stats-grid {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-                gap: 16px;
-                margin-bottom: 24px;
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+                gap: 20px;
+                margin-bottom: 30px;
             }
 
             .stat-card {
-                transition: transform 0.2s ease, box-shadow 0.2s ease;
+                border-radius: 16px;
+                transition: all 0.3s ease;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+                border: 1px solid rgba(255, 255, 255, 0.2);
+                background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+                overflow: hidden;
+                position: relative;
             }
 
             .stat-card:hover {
-                transform: translateY(-4px);
-                box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+                transform: translateY(-5px);
+                box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+            }
+
+            .stat-card::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: linear-gradient(90deg, #2196f3, #1976d2);
             }
 
             .stat-content {
                 display: flex;
                 align-items: center;
-                gap: 16px;
-                padding: 8px;
+                gap: 20px;
+                padding: 24px;
+                position: relative;
             }
 
             .stat-icon {
-                font-size: 2.5rem;
-                width: 2.5rem;
-                height: 2.5rem;
-                opacity: 0.8;
+                background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+                border-radius: 50%;
+                width: 56px;
+                height: 56px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #2196f3;
+                box-shadow: 0 4px 12px rgba(33, 150, 243, 0.2);
+                transition: all 0.3s ease;
+            }
+
+            .stat-card:hover .stat-icon {
+                transform: scale(1.1);
+                box-shadow: 0 6px 16px rgba(33, 150, 243, 0.3);
             }
 
             .stat-info {
@@ -283,95 +279,59 @@ import { StatisticsService, StatisticsIndividualWithAthlete } from '../../../../
             }
 
             .stat-value {
-                font-size: 2.5rem;
-                font-weight: bold;
-                line-height: 1;
+                font-size: 1.6rem;
+                font-weight: 700;
+                color: #333;
+                line-height: 1.2;
                 margin-bottom: 4px;
             }
 
             .stat-label {
-                font-size: 0.875rem;
-                color: #757575;
-                text-transform: uppercase;
+                font-size: 0.9rem;
+                color: #666;
+                font-weight: 500;
                 letter-spacing: 0.5px;
             }
 
-            /* Colores específicos para cada tipo de estadística */
-            .goals-card .stat-icon {
-                color: #4caf50;
+            /* No Stats Message */
+            .no-stats-message {
+                margin-bottom: 30px;
             }
 
-            .goals-card .stat-value {
-                color: #4caf50;
+            .no-stats-message .mat-card {
+                border-radius: 16px;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+                background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%);
+                border: 1px solid #ffc107;
             }
 
-            .assists-card .stat-icon {
-                color: #2196f3;
-            }
-
-            .assists-card .stat-value {
-                color: #2196f3;
-            }
-
-            .minutes-card .stat-icon {
-                color: #ff9800;
-            }
-
-            .minutes-card .stat-value {
-                color: #ff9800;
-            }
-
-            .yellow-card .stat-icon.yellow {
-                color: #ffc107;
-            }
-
-            .yellow-card .stat-value {
-                color: #ffc107;
-            }
-
-            .red-card .stat-icon.red {
-                color: #f44336;
-            }
-
-            .red-card .stat-value {
-                color: #f44336;
-            }
-
-            .matches-card .stat-icon {
-                color: #9c27b0;
-            }
-
-            .matches-card .stat-value {
-                color: #9c27b0;
-            }
-
-            .additional-info-card {
-                margin-bottom: 24px;
-            }
-
-            .info-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                gap: 16px;
-                margin-top: 16px;
-            }
-
-            .info-item {
+            .no-stats-content {
                 display: flex;
                 flex-direction: column;
-                gap: 4px;
+                align-items: center;
+                gap: 16px;
+                padding: 40px;
+                text-align: center;
             }
 
-            .info-item strong {
-                color: #666;
-                font-size: 0.875rem;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
+            .no-stats-content mat-icon {
+                font-size: 48px;
+                width: 48px;
+                height: 48px;
+                color: #ff9800;
             }
 
-            .info-item span {
-                font-size: 1.1rem;
-                color: #333;
+            .no-stats-content h3 {
+                margin: 0;
+                color: #e65100;
+                font-size: 1.5rem;
+                font-weight: 600;
+            }
+
+            .no-stats-content p {
+                margin: 0;
+                color: #bf5f00;
+                font-size: 1rem;
             }
 
             .loading-container {
@@ -411,13 +371,25 @@ import { StatisticsService, StatisticsIndividualWithAthlete } from '../../../../
             }
 
             /* Responsive */
-            @media (max-width: 768px) {
+            @media (max-width: 1200px) {
                 .athlete-stats-container {
                     padding: 16px;
+                }
+                
+                .stats-grid {
+                    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                    gap: 16px;
+                }
+            }
+
+            @media (max-width: 768px) {
+                .athlete-stats-container {
+                    padding: 12px;
                 }
 
                 .stats-grid {
                     grid-template-columns: 1fr;
+                    gap: 16px;
                 }
 
                 .athlete-name {
@@ -425,11 +397,7 @@ import { StatisticsService, StatisticsIndividualWithAthlete } from '../../../../
                 }
 
                 .stat-value {
-                    font-size: 2rem;
-                }
-
-                .info-grid {
-                    grid-template-columns: 1fr;
+                    font-size: 1.4rem;
                 }
             }
         `,
@@ -483,5 +451,56 @@ export class EstadisticasAthleteComponent implements OnInit {
 
     goBack() {
         this.router.navigate(['/estadisticas/jugadores']);
+    }
+
+    // Método para obtener solo los campos que vienen del backend (excluyendo athlete_id, id y fechas)
+    getBackendFields(): { key: string, value: any }[] {
+        if (!this.athleteStatistics) return [];
+        
+        return Object.keys(this.athleteStatistics)
+            .filter(key => 
+                key !== 'athlete_id' && 
+                key !== 'athlete' && 
+                key !== 'id' && 
+                !key.includes('date') && 
+                !key.includes('created') && 
+                !key.includes('updated')
+            ) // Excluir IDs, athlete y fechas
+            .map(key => ({
+                key: key,
+                value: (this.athleteStatistics as any)[key] || 0
+            }));
+    }
+
+    // Método para obtener el ícono apropiado para cada campo
+    getIconForField(fieldKey: string): string {
+        const iconMap: { [key: string]: string } = {
+            'goal': 'sports_soccer',
+            'assists': 'assistant',
+            'time_played': 'timer',
+            'yellow_card': 'warning',
+            'red_card': 'error',
+            'shots': 'sports_soccer',
+            'passes': 'swap_horiz',
+            'tackles': 'sports_kabaddi',
+            'saves': 'sports_volleyball'
+        };
+        return iconMap[fieldKey] || 'bar_chart';
+    }
+
+    // Método para obtener la etiqueta en español para cada campo
+    getFieldLabel(fieldKey: string): string {
+        const labelMap: { [key: string]: string } = {
+            'goal': 'Goles',
+            'assists': 'Asistencias',
+            'time_played': 'Minutos Jugados',
+            'yellow_card': 'Tarjetas Amarillas',
+            'red_card': 'Tarjetas Rojas',
+            'shots': 'Tiros',
+            'passes': 'Pases',
+            'tackles': 'Entradas',
+            'saves': 'Atajadas'
+        };
+        return labelMap[fieldKey] || fieldKey.replace('_', ' ').toUpperCase();
     }
 }
