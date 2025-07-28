@@ -15,7 +15,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { FormsModule } from '@angular/forms';
 
-import { StatisticsService } from '../../../../core/services/statistics/statistics.service';
+import { StatisticsService, Competition } from '../../../../core/services/statistics/statistics.service';
 import {
     StatisticsCompetence,
     StatisticsFilter,
@@ -453,7 +453,7 @@ import { CompetenciaFormComponent } from './competencia-form/competencia-form.co
     ],
 })
 export class CompetenciasComponent implements OnInit {
-    dataSource: any[] = [];
+    dataSource: Competition[] = [];
     displayedColumns = ['name', 'teams', 'startDate', 'endDate', 'actions'];
     standingsColumns = ['position', 'team', 'points', 'played', 'won', 'drawn', 'lost', 'goalsFor', 'goalsAgainst', 'goalDiff'];
     
@@ -486,27 +486,27 @@ export class CompetenciasComponent implements OnInit {
 
     loadCompetencias() {
         this.isLoading = true;
-        this.statisticsService.getAllCompetitionsStatistics(this.filter).subscribe({
+        console.log('🔄 Iniciando carga de competencias...');
+        
+        this.statisticsService.getAllCompetitions().subscribe({
             next: (response: any) => {
-                console.log('Datos de competencias recibidos del backend:', response);
-                // Si la respuesta es un array directo (no paginada)
-                if (Array.isArray(response)) {
-                    this.dataSource = response;
-                    this.totalItems = response.length;
-                } else if (response && response.data && response.meta) {
-                    // Si la respuesta es paginada
-                    this.dataSource = response.data;
-                    this.totalItems = response.meta.pagination.count;
-                } else {
-                    // Fallback: intentar mostrar lo que venga
-                    this.dataSource = response.data || response || [];
-                    this.totalItems = this.dataSource.length;
-                }
+                console.log('✅ Datos de competencias recibidos del backend:', response);
+                console.log('📊 Tipo de respuesta:', typeof response);
+                console.log('📊 Es array:', Array.isArray(response));
+                console.log('📊 Longitud:', response?.length);
+                
+                // La respuesta debe ser un array directo de competencias
+                this.dataSource = response || [];
+                this.totalItems = this.dataSource.length;
+                
+                console.log('📋 DataSource asignado:', this.dataSource);
+                console.log('📋 Total items:', this.totalItems);
+                
                 this.calculateStats();
                 this.isLoading = false;
             },
             error: (error: any) => {
-                console.error('Error cargando competencias:', error);
+                console.error('❌ Error cargando competencias:', error);
                 this.isLoading = false;
                 this.snackBar.open('Error al cargar las competencias', 'Cerrar', {
                     duration: 3000
@@ -516,17 +516,34 @@ export class CompetenciasComponent implements OnInit {
     }
 
     calculateStats() {
+        console.log('📊 Calculando estadísticas...');
+        console.log('📊 DataSource para calcular:', this.dataSource);
+        
         this.totalCompetencias = this.dataSource.length;
-        this.totalEquipos = this.dataSource.reduce((sum, comp) => sum + (comp.id_team?.length || comp.total_teams || 0), 0);
-        const totalPartidos = this.dataSource.reduce((sum, comp) => sum + (comp.total_matches || 0), 0);
-        const totalGoles = this.dataSource.reduce((sum, comp) => sum + (comp.total_goals || 0), 0);
+        this.totalEquipos = this.dataSource.reduce((sum, comp) => {
+            const teams = comp.id_team?.length || 0;
+            console.log(`📊 Competencia "${comp.name}": ${teams} equipos`);
+            return sum + teams;
+        }, 0);
+        
+        // Para competitions simples, no tenemos datos de partidos y goles directamente
+        // Estos se mostrarán como 0 a menos que implementemos llamadas adicionales para obtener estadísticas
+        const totalPartidos = 0;
+        const totalGoles = 0;
         this.promedioGoles = totalPartidos > 0 ? totalGoles / totalPartidos : 0;
+        
+        console.log('📊 Estadísticas finales:');
+        console.log('  - Total competencias:', this.totalCompetencias);
+        console.log('  - Total equipos:', this.totalEquipos);
+        console.log('  - Promedio goles:', this.promedioGoles);
     }
 
     onSearchChange(search: string) {
-        this.filter.search = search;
-        this.filter.page = 1;
-        this.loadCompetencias();
+        console.log('🔍 Búsqueda deshabilitada temporalmente:', search);
+        // Temporalmente deshabilitado para debugging
+        // this.filter.search = search;
+        // this.filter.page = 1;
+        // this.loadCompetencias();
     }
 
     onPageChange(event: any) {
