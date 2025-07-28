@@ -106,6 +106,40 @@ export interface AthleteUpdate {
     team_id?: string;
 }
 
+// Interface para estadísticas individuales con información del atleta
+export interface StatisticsIndividualWithAthlete {
+    id?: string;
+    _id?: string;
+    description?: string;
+    date_generation?: Date | string;
+    value?: number;
+    id_athlete?: string;
+    goals?: number;
+    assists?: number;
+    yellow_cards?: number;
+    red_cards?: number;
+    games_played?: number;
+    fouls_committed?: number;
+    fouls_received?: number;
+    offsides?: number;
+    saves?: number;
+    passes_completed?: number;
+    passes_attempted?: number;
+    shots_on_target?: number;
+    shots_off_target?: number;
+    distance_covered?: number;
+    top_speed?: number;
+    average_speed?: number;
+    time_played?: number;
+    // Información del atleta
+    athlete: {
+        id: string;
+        name: string;
+        position?: string;
+        team_id?: string;
+    };
+}
+
 // Interfaces para Seasons (CRUD)
 export interface Season {
     id?: string;
@@ -740,6 +774,33 @@ export class StatisticsService {
      */
     deleteAthlete(athleteId: string): Observable<void> {
         return this.http.delete<void>(`${this.athletesApiUrl}/${athleteId}`);
+    }
+
+    /**
+     * Obtiene las estadísticas de un atleta específico con información completa del atleta
+     */
+    getAthleteStatistics(athleteId: string): Observable<StatisticsIndividualWithAthlete> {
+        console.log('🏃‍♂️ Fetching athlete statistics for ID:', athleteId);
+        console.log('🌐 API URL will be:', `http://localhost:8012/api/v1/statistics/individual/by-athlete/${athleteId}`);
+        
+        return this.http.get<StatisticsIndividualWithAthlete>(`http://localhost:8012/api/v1/statistics/individual/by-athlete/${athleteId}`)
+            .pipe(
+                tap(response => {
+                    console.log('✅ Successfully fetched athlete statistics:', response);
+                    console.log('👤 Athlete info:', response.athlete);
+                    console.log('📊 Statistics data available');
+                }),
+                catchError(error => {
+                    console.error('❌ Error fetching athlete statistics:', error);
+                    console.error('📍 Error details:', {
+                        status: error.status,
+                        statusText: error.statusText,
+                        url: error.url,
+                        message: error.message
+                    });
+                    throw error;
+                })
+            );
     }
 
     // ==================== SEASONS (CRUD) ====================

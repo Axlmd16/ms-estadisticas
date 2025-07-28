@@ -1,10 +1,11 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, Path
 from typing import List
 from beanie import PydanticObjectId
 from app.schemas.statistic_individual_schema import (
     StatisticIndividualCreate,
     StatisticIndividualUpdate,
     StatisticIndividualResponse,
+    StatisticIndividualWithAthleteResponse,
 )
 from app.services.statistic_individual_service import statistic_individual_service
 
@@ -56,6 +57,18 @@ async def update_statistic(stat_id: PydanticObjectId, data: StatisticIndividualU
         StatisticIndividualResponse: Estadística individual actualizada.
     """
     return await statistic_individual_service.update_statistic(stat_id, data)
+
+@router.get("/by-athlete/{athlete_id}", response_model=StatisticIndividualWithAthleteResponse)
+async def get_statistic_by_athlete_id(athlete_id: str = Path(...)):
+    """
+    Obtiene las estadísticas individuales de un atleta específico con información completa del atleta.
+
+    Args:
+        athlete_id (str): ID del atleta.
+    Returns:
+        StatisticIndividualWithAthleteResponse: Estadísticas del atleta con información completa.
+    """
+    return await statistic_individual_service.get_statistic_by_athlete_id(athlete_id)
 
 @router.delete("/{stat_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_statistic(stat_id: PydanticObjectId):

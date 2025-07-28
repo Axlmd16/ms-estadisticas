@@ -11,7 +11,9 @@ from fastapi import HTTPException, status
 from bson import ObjectId
 
 from app.repositories.player_repository import PlayerRepository
+from app.repositories.statistic_individual_repository import StatisticIndividualRepository
 from app.schemas.athlete_schema import AthleteCreate, AthleteUpdate, AthleteResponse
+from app.schemas.statistic_individual_schema import StatisticIndividualCreate
 
 logger = logging.getLogger(__name__)
 
@@ -21,13 +23,15 @@ class PlayerService:
     """
     def __init__(self):
         """
-        Inicializa el servicio con una instancia del repositorio de jugadores.
+        Inicializa el servicio con una instancia del repositorio de jugadores y estadísticas.
         """
         self.repo = PlayerRepository()
+        self.stats_repo = StatisticIndividualRepository()
 
     async def create_athlete(self, athlete: AthleteCreate) -> AthleteResponse:
         """
-        Crea un nuevo jugador (atleta) en la base de datos.
+        Crea un nuevo jugador (atleta) en la base de datos y automáticamente 
+        crea un registro de estadísticas individuales con valores en cero.
 
         Args:
             athlete (AthleteCreate): Datos del jugador a crear.
@@ -42,7 +46,35 @@ class PlayerService:
             if "team_id" in athlete_data and athlete_data["team_id"]:
                 athlete_data["team_id"] = ObjectId(athlete_data["team_id"])
 
+            # Crear el atleta
             doc = await self.repo.create(athlete_data)
+            
+            # Auto-crear estadísticas individuales con valores en cero
+            stats_data = StatisticIndividualCreate(
+                description=f"Estadísticas iniciales para {doc.name}",
+                id_athlete=str(doc.id),
+                goals=0,
+                assists=0,
+                yellow_cards=0,
+                red_cards=0,
+                games_played=0,
+                fouls_committed=0,
+                fouls_received=0,
+                offsides=0,
+                saves=0,
+                passes_completed=0,
+                passes_attempted=0,
+                shots_on_target=0,
+                shots_off_target=0,
+                distance_covered=0.0,
+                top_speed=0.0,
+                average_speed=0.0,
+                time_played=0
+            )
+            
+            await self.stats_repo.create(stats_data.model_dump(exclude_unset=True))
+            logger.info(f"Auto-created statistics for athlete {doc.name} (ID: {doc.id})")
+            
             return AthleteResponse(
                 id=str(doc.id),
                 name=doc.name,

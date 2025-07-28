@@ -223,7 +223,7 @@ import { StatisticsService, TeamStatisticsWithInfo } from '../../../../../core/s
                                     </div>
                                     
                                     <div class="athletes-grid">
-                                        <mat-card class="athlete-card" *ngFor="let athlete of teamStatistics!.athletes; trackBy: trackByAthleteId">
+                                        <mat-card class="athlete-card" *ngFor="let athlete of teamStatistics!.athletes; trackBy: trackByAthleteId" (click)="viewAthleteStatistics(athlete._id || athlete.id || '')">>
                                             <mat-card-content>
                                                 <div class="athlete-avatar">
                                                     <mat-icon>person</mat-icon>
@@ -239,6 +239,9 @@ import { StatisticsService, TeamStatisticsWithInfo } from '../../../../../core/s
                                                     <div class="athlete-id">
                                                         <small>ID: {{ athlete._id || athlete.id }}</small>
                                                     </div>
+                                                </div>
+                                                <div class="view-stats-icon">
+                                                    <mat-icon>visibility</mat-icon>
                                                 </div>
                                             </mat-card-content>
                                         </mat-card>
@@ -584,6 +587,7 @@ import { StatisticsService, TeamStatisticsWithInfo } from '../../../../../core/s
                 border-radius: 15px;
                 overflow: hidden;
                 border: 2px solid transparent;
+                cursor: pointer;
             }
 
             .athlete-card:hover {
@@ -597,6 +601,7 @@ import { StatisticsService, TeamStatisticsWithInfo } from '../../../../../core/s
                 display: flex;
                 align-items: center;
                 gap: 20px;
+                position: relative;
             }
 
             .athlete-avatar {
@@ -639,6 +644,20 @@ import { StatisticsService, TeamStatisticsWithInfo } from '../../../../../core/s
             .athlete-id {
                 color: #999;
                 font-size: 0.8rem;
+            }
+
+            .view-stats-icon {
+                position: absolute;
+                top: 50%;
+                right: 20px;
+                transform: translateY(-50%);
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                color: #667eea;
+            }
+
+            .athlete-card:hover .view-stats-icon {
+                opacity: 1;
             }
 
             /* No Athletes State */
@@ -851,6 +870,11 @@ export class EstadisticasEquipoComponent implements OnInit {
 
     goBack() {
         this.router.navigate(['/estadisticas/competencias']);
+    }
+
+    viewAthleteStatistics(athleteId: string) {
+        console.log('🏃‍♂️ Navigating to athlete statistics for ID:', athleteId);
+        this.router.navigate(['/estadisticas/jugadores', athleteId]);
     }
 
     trackByAthleteId(index: number, athlete: any): string {
