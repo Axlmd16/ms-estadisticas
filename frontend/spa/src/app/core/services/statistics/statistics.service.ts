@@ -1,3 +1,31 @@
+// Interfaces para tabla de posiciones con equipos
+export interface TableRatingPosition {
+    id: string;
+    position: number;
+    points_total?: number;
+    matches_played?: number;
+    matches_won?: number;
+    matches_drawn?: number;
+    matches_lost?: number;
+    goals_for?: number;
+    goals_against?: number;
+    team_id: string;
+    team: Team;
+}
+
+export interface TableRatingWithTeams {
+    table_rating: {
+        id: string;
+        competition_id: string;
+        last_update?: string;
+        positions: string[];
+    };
+    positions: TableRatingPosition[];
+}
+
+// ...otros imports y código existentes...
+
+
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
@@ -905,6 +933,14 @@ export class StatisticsService {
      */
     updateResult(resultId: string, result: ResultUpdate): Observable<Result> {
         return this.http.put<Result>(`${this.resultsApiUrl}/${resultId}`, result);
+    }
+
+    /**
+     * Obtiene la tabla de posiciones de una competencia con equipos y posiciones anidadas
+     */
+    getTableRatingWithTeams(competitionId: string): Observable<TableRatingWithTeams> {
+        const url = `http://localhost:8012/api/v1/table_ratings/competition/${competitionId}`;
+        return this.http.get<TableRatingWithTeams>(url);
     }
 
     /**

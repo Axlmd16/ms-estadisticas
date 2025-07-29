@@ -1,0 +1,300 @@
+<div class="competencia-detail-container" *ngIf="competenciaCompleta">
+    <!-- Encabezado -->
+    <mat-card class="header-card">
+        <mat-card-header>
+            <div mat-card-avatar class="competition-avatar">
+                <mat-icon>emoji_events</mat-icon>
+            </div>
+            <mat-card-title>{{ competenciaCompleta.name || competencia?.description || 'Competencia' }}</mat-card-title>
+            <mat-card-subtitle>
+                Estadísticas detalladas de la competencia
+            </mat-card-subtitle>
+        </mat-card-header>
+        <mat-card-actions>
+            <button mat-raised-button color="primary" (click)="editCompetencia()">
+                <mat-icon>edit</mat-icon>
+                Editar
+            </button>
+            <button mat-raised-button color="warn" (click)="deleteCompetencia()">
+                <mat-icon>delete</mat-icon>
+                Eliminar
+            </button>
+        </mat-card-actions>
+    </mat-card>
+
+    <!-- Estadísticas principales -->
+    <div class="stats-grid">
+        <mat-card class="stat-card">
+            <mat-card-content>
+                <div class="stat-icon">
+                    <mat-icon>groups</mat-icon>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ competenciaCompleta.teams?.length || 0 }}</div>
+                    <div class="stat-label">Equipos</div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+            <mat-card-content>
+                <div class="stat-icon">
+                    <mat-icon>sports_soccer</mat-icon>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ competencia?.total_parties || 0 }}</div>
+                    <div class="stat-label">Total Partidos</div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+
+        <mat-card class="stat-card">
+            <mat-card-content>
+                <div class="stat-icon">
+                    <mat-icon>sports_score</mat-icon>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ competencia?.matches_completed || 0 }}</div>
+                    <div class="stat-label">Partidos Completados</div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+        <mat-card class="stat-card">
+            <mat-card-content>
+                <div class="stat-icon">
+                    <mat-icon>trending_up</mat-icon>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ (competencia?.average_score || 0) | number:'1.2-2' }}</div>
+                    <div class="stat-label">Promedio de Puntos</div>
+                </div>
+            </mat-card-content>
+        </mat-card>
+    </div>
+
+    <!-- Información detallada -->
+    <mat-tab-group>
+        <mat-tab label="Información General">
+            <div class="tab-content">
+                <mat-card>
+                    <mat-card-header>
+                        <mat-card-title>Datos de la Competencia</mat-card-title>
+                    </mat-card-header>
+                    <mat-card-content>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <strong>Nombre:</strong>
+                                <span>{{ competenciaCompleta.name || competencia?.description || 'N/A' }}</span>
+                            </div>
+                            <div class="info-item">
+                                <strong>ID de Competencia:</strong>
+                                <span>{{ competenciaCompleta.id || competencia?.id_competition || competenciaId }}</span>
+                            </div>
+                            <div class="info-item">
+                                <strong>Fecha de Inicio:</strong>
+                                <span>{{ competenciaCompleta.start_date | date:'medium' }}</span>
+                            </div>
+                            <div class="info-item">
+                                <strong>Fecha de Fin:</strong>
+                                <span>{{ competenciaCompleta.end_date | date:'medium' }}</span>
+                            </div>
+                            <div class="info-item">
+                                <strong>Total de Equipos:</strong>
+                                <span>{{ competenciaCompleta.teams?.length || 0 }}</span>
+                            </div>
+                            <div class="info-item" *ngIf="competencia?.total_parties">
+                                <strong>Total de Partidos:</strong>
+                                <span>{{ competencia?.total_parties }}</span>
+                            </div>
+                            <div class="info-item" *ngIf="competencia?.matches_completed">
+                                <strong>Partidos Completados:</strong>
+                                <span>{{ competencia?.matches_completed }}</span>
+                            </div>
+                            <div class="info-item" *ngIf="competencia?.average_score">
+                                <strong>Promedio de Puntos:</strong>
+                                <span>{{ competencia?.average_score | number:'1.2-2' }}</span>
+                            </div>
+                            <div class="info-item" *ngIf="competencia?.record_score">
+                                <strong>Puntuación Récord:</strong>
+                                <span>{{ competencia?.record_score }}</span>
+                            </div>
+                            <div class="info-item" *ngIf="competencia?.date_generation">
+                                <strong>Última Actualización:</strong>
+                                <span>{{ competencia?.date_generation | date:'medium' }}</span>
+                            </div>
+                        </div>
+                    </mat-card-content>
+                </mat-card>
+            </div>
+        </mat-tab>
+
+        <mat-tab label="Estadísticas">
+            <div class="tab-content">
+                <mat-card>
+                    <mat-card-header>
+                        <mat-card-title>Métricas de Rendimiento</mat-card-title>
+                    </mat-card-header>
+                    <mat-card-content>
+                        <div *ngIf="competencia; else noStatsAvailable">
+                            <div class="metrics-grid">
+                                <div class="metric-item">
+                                    <div class="metric-value">{{ competenciaCompleta.teams?.length || 0 }}</div>
+                                    <div class="metric-label">Equipos Participantes</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-value">{{ competencia.total_parties || 0 }}</div>
+                                    <div class="metric-label">Total de Partidos</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-value">{{ competencia.matches_completed || 0 }}</div>
+                                    <div class="metric-label">Partidos Completados</div>
+                                </div>
+                                <div class="metric-item">
+                                    <div class="metric-value">{{ (competencia.average_score || 0) | number:'1.2-2' }}</div>
+                                    <div class="metric-label">Promedio de Puntos</div>
+                                </div>
+                                <div class="metric-item" *ngIf="competencia.record_score">
+                                    <div class="metric-value">{{ competencia.record_score }}</div>
+                                    <div class="metric-label">Puntuación Récord</div>
+                                </div>
+                            </div>
+                        </div>
+                        <ng-template #noStatsAvailable>
+                            <div class="no-data">
+                                <mat-icon>analytics</mat-icon>
+                                <h3>Estadísticas no disponibles</h3>
+                                <p>Las estadísticas de esta competencia aún no están disponibles.</p>
+                                <p>Se mostrarán una vez que se registren partidos y resultados.</p>
+                            </div>
+                        </ng-template>
+                    </mat-card-content>
+                </mat-card>
+            </div>
+        </mat-tab>
+
+        <mat-tab label="Disciplina">
+            <div class="tab-content">
+                <mat-card>
+                    <mat-card-header>
+                        <mat-card-title>Estadísticas Disciplinarias</mat-card-title>
+                    </mat-card-header>
+                    <mat-card-content>
+                        <div class="no-data">
+                            <mat-icon>gavel</mat-icon>
+                            <h3>Datos disciplinarios no disponibles</h3>
+                            <p>Los datos de tarjetas aún no están implementados en este modelo de estadísticas.</p>
+                            <p>Esta funcionalidad será agregada en futuras versiones.</p>
+                        </div>
+                    </mat-card-content>
+                </mat-card>
+            </div>
+        </mat-tab>
+
+        <mat-tab label="Equipos">
+            <div class="tab-content">
+                <mat-card>
+                    <mat-card-header>
+                        <mat-card-title>Equipos Participantes</mat-card-title>
+                        <mat-card-subtitle>{{ competenciaCompleta.teams?.length || 0 }} equipos registrados</mat-card-subtitle>
+                    </mat-card-header>
+                    <mat-card-content>
+                        <div *ngIf="competenciaCompleta.teams && competenciaCompleta.teams.length > 0; else noTeams">
+                            <div class="teams-grid">
+                                <mat-card *ngFor="let team of competenciaCompleta.teams" class="team-card">
+                                    <mat-card-header>
+                                        <div mat-card-avatar class="team-avatar">
+                                            <mat-icon>groups</mat-icon>
+                                        </div>
+                                        <mat-card-title>{{ team.name }}</mat-card-title>
+                                        <mat-card-subtitle *ngIf="team.description">{{ team.description }}</mat-card-subtitle>
+                                    </mat-card-header>
+                                    <mat-card-content>
+                                        <div class="team-info" *ngIf="team.founded">
+                                            <mat-icon>event</mat-icon>
+                                            <span>Fundado en {{ team.founded }}</span>
+                                        </div>
+                                    </mat-card-content>
+                                    <mat-card-actions>
+                                        <button mat-raised-button color="primary" (click)="viewTeamStatistics(team._id || team.id || '')">
+                                            <mat-icon>visibility</mat-icon>
+                                            Ver Estadísticas
+                                        </button>
+                                    </mat-card-actions>
+                                </mat-card>
+                            </div>
+                        </div>
+                        <ng-template #noTeams>
+                            <div class="no-data">
+                                <mat-icon>groups_off</mat-icon>
+                                <p>No hay equipos registrados en esta competencia</p>
+                            </div>
+                        </ng-template>
+                    </mat-card-content>
+                </mat-card>
+            </div>
+        </mat-tab>
+
+        <mat-tab label="Tabla de Posiciones" (click)="loadTableRating()">
+            <div class="tab-content">
+                <mat-card>
+                    <mat-card-header>
+                        <mat-card-title>Tabla de Posiciones</mat-card-title>
+                    </mat-card-header>
+                    <mat-card-content>
+                        <div *ngIf="tableRatings.length > 0; else noTable">
+                            <table mat-table [dataSource]="tableRatings" class="standings-table">
+                                <ng-container matColumnDef="position">
+                                    <th mat-header-cell *matHeaderCellDef>Pos.</th>
+                                    <td mat-cell *matCellDef="let element">{{ element.position }}</td>
+                                </ng-container>
+
+                                <ng-container matColumnDef="team">
+                                    <th mat-header-cell *matHeaderCellDef>Equipo</th>
+                                    <td mat-cell *matCellDef="let element">{{ element.team?.name || 'N/A' }}</td>
+                                </ng-container>
+
+                                <ng-container matColumnDef="points">
+                                    <th mat-header-cell *matHeaderCellDef>Pts</th>
+                                    <td mat-cell *matCellDef="let element">{{ element.points_total ?? 0 }}</td>
+                                </ng-container>
+
+                                <!-- Puedes agregar más columnas si tu backend las provee, por ejemplo partidos jugados, ganados, etc. -->
+
+                                <tr mat-header-row *matHeaderRowDef="['position', 'team', 'points']"></tr>
+                                <tr mat-row *matRowDef="let row; columns: ['position', 'team', 'points'];"></tr>
+                            </table>
+                        </div>
+                        <ng-template #noTable>
+                            <div class="no-data">
+                                <mat-icon>table_view</mat-icon>
+                                <p>No hay datos de tabla de posiciones disponibles</p>
+                            </div>
+                        </ng-template>
+                    </mat-card-content>
+                </mat-card>
+            </div>
+        </mat-tab>
+    </mat-tab-group>
+</div>
+
+<!-- Loading spinner -->
+<div class="loading-container" *ngIf="isLoading">
+    <mat-spinner></mat-spinner>
+    <p>Cargando información de la competencia...</p>
+</div>
+
+<!-- Error message -->
+<div class="error-container" *ngIf="error">
+    <mat-card>
+        <mat-card-content>
+            <div class="error-content">
+                <mat-icon color="warn">error</mat-icon>
+                <h3>Error al cargar la información</h3>
+                <p>{{ error }}</p>
+                <button mat-raised-button color="primary" (click)="loadCompetenciaStatistics(competenciaId)">
+                    Reintentar
+                </button>
+            </div>
+        </mat-card-content>
+    </mat-card>
+</div>

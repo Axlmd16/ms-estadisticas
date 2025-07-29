@@ -11,7 +11,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { StatisticsService } from '../../../../../core/services/statistics/statistics.service';
-import { StatisticsCompetence, TableRating, StatisticsFilter } from '../../../../../core/models/statistics';
+import { StatisticsCompetence, StatisticsFilter } from '../../../../../core/models/statistics';
+import type { TableRatingWithTeams, TableRatingPosition } from '../../../../../core/services/statistics/statistics.service';
 import { CompetenciaFormComponent } from '../competencia-form/competencia-form.component';
 import { ApiPaginationResponse } from '../../../../../core/models/api-response';
 import type { CompetitionWithTeams } from '../../../../../core/services/statistics/statistics.service';
@@ -287,46 +288,13 @@ import type { CompetitionWithTeams } from '../../../../../core/services/statisti
 
                                         <ng-container matColumnDef="points">
                                             <th mat-header-cell *matHeaderCellDef>Pts</th>
-                                            <td mat-cell *matCellDef="let element">{{ element.points }}</td>
+                                            <td mat-cell *matCellDef="let element">{{ element.points_total ?? 0 }}</td>
                                         </ng-container>
 
-                                        <ng-container matColumnDef="played">
-                                            <th mat-header-cell *matHeaderCellDef>PJ</th>
-                                            <td mat-cell *matCellDef="let element">{{ element.matches_played }}</td>
-                                        </ng-container>
+                                        <!-- Puedes agregar más columnas si tu backend las provee, por ejemplo partidos jugados, ganados, etc. -->
 
-                                        <ng-container matColumnDef="won">
-                                            <th mat-header-cell *matHeaderCellDef>PG</th>
-                                            <td mat-cell *matCellDef="let element">{{ element.matches_won }}</td>
-                                        </ng-container>
-
-                                        <ng-container matColumnDef="drawn">
-                                            <th mat-header-cell *matHeaderCellDef>PE</th>
-                                            <td mat-cell *matCellDef="let element">{{ element.matches_drawn }}</td>
-                                        </ng-container>
-
-                                        <ng-container matColumnDef="lost">
-                                            <th mat-header-cell *matHeaderCellDef>PP</th>
-                                            <td mat-cell *matCellDef="let element">{{ element.matches_lost }}</td>
-                                        </ng-container>
-
-                                        <ng-container matColumnDef="goalsFor">
-                                            <th mat-header-cell *matHeaderCellDef>GF</th>
-                                            <td mat-cell *matCellDef="let element">{{ element.goals_for }}</td>
-                                        </ng-container>
-
-                                        <ng-container matColumnDef="goalsAgainst">
-                                            <th mat-header-cell *matHeaderCellDef>GC</th>
-                                            <td mat-cell *matCellDef="let element">{{ element.goals_against }}</td>
-                                        </ng-container>
-
-                                        <ng-container matColumnDef="goalDiff">
-                                            <th mat-header-cell *matHeaderCellDef>DG</th>
-                                            <td mat-cell *matCellDef="let element">{{ (element.goals_for || 0) - (element.goals_against || 0) }}</td>
-                                        </ng-container>
-
-                                        <tr mat-header-row *matHeaderRowDef="standingsColumns"></tr>
-                                        <tr mat-row *matRowDef="let row; columns: standingsColumns;"></tr>
+                                        <tr mat-header-row *matHeaderRowDef="['position', 'team', 'points']"></tr>
+                                        <tr mat-row *matRowDef="let row; columns: ['position', 'team', 'points'];"></tr>
                                     </table>
                                 </div>
                                 <ng-template #noTable>
@@ -824,7 +792,7 @@ import type { CompetitionWithTeams } from '../../../../../core/services/statisti
 export class CompetenciaDetalleComponent implements OnInit {
     competencia?: StatisticsCompetence;
     competenciaCompleta?: CompetitionWithTeams;
-    tableRatings: TableRating[] = [];
+    tableRatings: TableRatingPosition[] = [];
     isLoading = false;
     error: string | null = null;
     competenciaId: string = '';
@@ -844,6 +812,7 @@ export class CompetenciaDetalleComponent implements OnInit {
                 this.competenciaId = params['id'];
                 this.loadCompetenciaStatistics(this.competenciaId);
                 this.loadCompetenciaCompleta(this.competenciaId);
+                this.loadTableRating(); // Llama automáticamente para ver logs y datos
             }
         });
     }
@@ -899,12 +868,25 @@ export class CompetenciaDetalleComponent implements OnInit {
     }
 
     loadTableRating() {
-        if (this.competenciaId && this.tableRatings.length === 0) {
-            this.statisticsService.getTableRating(this.competenciaId).subscribe({
-                next: (response: ApiPaginationResponse<TableRating>) => {
-                    this.tableRatings = response.data;
+        if (this.competenciaId) {
+            this.isLoading = true;
+            console.log('[FRONT] Solicitando info de tabla de posiciones al backend para competenciaId:', this.competenciaId);
+            this.statisticsService.getTableRatingWithTeams(this.competenciaId).subscribe({
+                next: (response: TableRatingWithTeams) => {
+                    console.log('[BACKEND] Info de backend sobre tabla de posiciones:', response);
+                    if (response && Array.isArray(response.positions) && response.positions.length > 0) {
+                        this.tableRatings = response.positions.map((pos, idx) => ({
+                            ...pos,
+                            position: idx + 1 // Si no viene la posición, la calculamos
+                        }));
+                    } else {
+                        this.tableRatings = [];
+                    }
+                    this.isLoading = false;
                 },
                 error: (error) => {
+                    this.error = 'Error cargando tabla de posiciones';
+                    this.isLoading = false;
                     console.error('Error cargando tabla de posiciones:', error);
                 },
             });
