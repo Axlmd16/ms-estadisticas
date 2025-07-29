@@ -583,8 +583,19 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
       status = 'PARTIDO EN PROGRESO';
       statusColor = Colors.green;
     } else {
-      status = 'PARTIDO NO INICIADO';
-      statusColor = Colors.blue;
+      // Verificar si el partido está programado para el futuro
+      final now = DateTime.now();
+      final matchDate = _matchData?['date'] != null 
+          ? DateTime.tryParse(_matchData!['date']) 
+          : null;
+      
+      if (matchDate != null && matchDate.isAfter(now)) {
+        status = 'PARTIDO PROGRAMADO';
+        statusColor = Colors.orange;
+      } else {
+        status = 'PARTIDO NO INICIADO';
+        statusColor = Colors.blue;
+      }
     }
 
     return Card(
