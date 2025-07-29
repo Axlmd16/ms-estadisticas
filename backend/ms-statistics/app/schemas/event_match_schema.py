@@ -15,8 +15,9 @@ class EventMatchBase(BaseModel):
     description: Optional[str] = None
     date_registration: Optional[datetime] = None
     minute: Optional[float] = None
-    type_event: Optional[str] = None
+    type_event: Optional[str] = None  # ID del CatalogItem del evento
     athlete_id: Optional[str] = None  
+    match_id: Optional[str] = None  # ID del match donde ocurrió el evento  
 
 class EventMatchCreate(EventMatchBase):
     """
@@ -35,6 +36,7 @@ class EventMatchUpdate(EventMatchBase):
     minute: Optional[float] = None
     type_event: Optional[str] = None
     athlete_id: Optional[str] = None
+    match_id: Optional[str] = None
 
 class EventMatchResponse(EventMatchBase):
     """

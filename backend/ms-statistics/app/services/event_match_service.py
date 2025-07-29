@@ -48,12 +48,15 @@ class EventMatchService:
 
             athlete_oid = ObjectId(event_data["athlete_id"]) if "athlete_id" in event_data and event_data["athlete_id"] else None
             type_event_oid = ObjectId(event_data["type_event"]) if "type_event" in event_data and event_data["type_event"] else None
+            match_oid = ObjectId(event_data["match_id"]) if "match_id" in event_data and event_data["match_id"] else None
 
             event_data["athlete_id"] = athlete_oid
             event_data["type_event"] = type_event_oid
+            event_data["match_id"] = match_oid
 
             doc = await self.repo.create(event_data)
 
+            # Actualizar estadísticas individuales del atleta (lógica existente)
             if athlete_oid and type_event_oid:
                 catalog_item = await CatalogItem.get(type_event_oid)
                 if catalog_item and catalog_item.description in ["goal", "own goal", "foul", "red card", "yellow card"]:
@@ -82,6 +85,10 @@ class EventMatchService:
                             "date_generation": datetime.utcnow().isoformat()
                         }
                         await self.stat_repo.update(existing_stat.id, update_data)
+                
+                # NUEVA FUNCIONALIDAD: Actualizar scoreboard si es un gol
+                if catalog_item and catalog_item.code in ["GOL", "GOL_PENAL", "GOL_TIRO_LIBRE", "AUTOGOL"] and match_oid:
+                    await self._update_scoreboard_on_goal(match_oid, catalog_item.code, athlete_oid)
 
             return EventMatchResponse(
                 id=str(doc.id),
@@ -90,6 +97,7 @@ class EventMatchService:
                 minute=doc.minute,
                 type_event=str(doc.type_event) if doc.type_event else None,
                 athlete_id=str(doc.athlete_id) if doc.athlete_id else None,
+                match_id=str(doc.match_id) if doc.match_id else None,
             )
         except Exception as e:
             logger.error(f"Error creating event match: {str(e)}")
@@ -117,6 +125,7 @@ class EventMatchService:
                     minute=e.minute,
                     type_event=str(e.type_event) if e.type_event else None,
                     athlete_id=str(e.athlete_id) if e.athlete_id else None,
+                    match_id=str(e.match_id) if e.match_id else None,
                 ) for e in events
             ]
         except Exception as e:
@@ -147,6 +156,7 @@ class EventMatchService:
             minute=event.minute,
             type_event=str(event.type_event) if event.type_event else None,
             athlete_id=str(event.athlete_id) if event.athlete_id else None,
+            match_id=str(event.match_id) if event.match_id else None,
         )
 
     async def update_event_match(self, event_id: PydanticObjectId, event: EventMatchUpdate) -> EventMatchResponse:
@@ -172,6 +182,9 @@ class EventMatchService:
 
         if "athlete_id" in update_data and update_data["athlete_id"]:
             update_data["athlete_id"] = ObjectId(update_data["athlete_id"])
+        
+        if "match_id" in update_data and update_data["match_id"]:
+            update_data["match_id"] = ObjectId(update_data["match_id"])
 
         updated = await self.repo.update(event_id, update_data)
         return EventMatchResponse(
@@ -181,6 +194,7 @@ class EventMatchService:
             minute=updated.minute,
             type_event=str(updated.type_event) if updated.type_event else None,
             athlete_id=str(updated.athlete_id) if updated.athlete_id else None,
+            match_id=str(updated.match_id) if updated.match_id else None,
         )
 
     async def delete_event_match(self, event_id: PydanticObjectId) -> None:
@@ -195,5 +209,58 @@ class EventMatchService:
         deleted = await self.repo.delete(event_id)
         if not deleted:
             raise HTTPException(status_code=404, detail="EventMatch not found")
+
+    async def _update_scoreboard_on_goal(self, match_id: ObjectId, goal_type: str, athlete_id: ObjectId):
+        """
+        Actualiza el scoreboard cuando se registra un gol.
+        
+        Args:
+            match_id (ObjectId): ID del match
+            goal_type (str): Tipo de gol (GOL, GOL_PENAL, etc.)
+            athlete_id (ObjectId): ID del atleta que hizo el gol
+        """
+        try:
+            # Importar aquí para evitar dependencias circulares
+            from app.repositories.scoreboard_repository import ScoreboardRepository
+            from app.repositories.match_repository import MatchRepository
+            from app.schemas.scoreboard_schema import ScoreboardUpdate
+            
+            scoreboard_repo = ScoreboardRepository()
+            match_repo = MatchRepository()
+            
+            # Buscar el scoreboard del match
+            scoreboard = await scoreboard_repo.model.find_one({"match_id": match_id})
+            if not scoreboard:
+                logger.warning(f"No scoreboard found for match {match_id}")
+                return
+            
+            # Obtener información del match para determinar si es local o visitante
+            match = await match_repo.get_by_id(match_id)
+            if not match:
+                logger.warning(f"Match {match_id} not found")
+                return
+            
+            # Determinar si es gol del equipo local o visitante
+            # Por ahora, como no tenemos la relación athlete->team, incrementamos score_local
+            # TODO: Implementar lógica para determinar si el atleta pertenece al equipo local o visitante
+            
+            if goal_type == "AUTOGOL":
+                # En autogol, se suma al equipo contrario
+                # Por simplicidad, sumamos al score_visitor
+                new_score = scoreboard.score_visitor + 1
+                update_data = ScoreboardUpdate(score_visitor=new_score)
+            else:
+                # Gol normal, sumar al equipo local (por defecto)
+                new_score = scoreboard.score_local + 1
+                update_data = ScoreboardUpdate(score_local=new_score)
+            
+            # Actualizar el scoreboard
+            await scoreboard_repo.update(scoreboard.id, update_data.model_dump(exclude_unset=True))
+            
+            logger.info(f"Scoreboard updated for match {match_id}: {goal_type} scored by athlete {athlete_id}")
+            
+        except Exception as e:
+            logger.error(f"Error updating scoreboard on goal: {str(e)}")
+            # No lanzamos excepción para no interrumpir la creación del evento
 
 event_match_service = EventMatchService()
