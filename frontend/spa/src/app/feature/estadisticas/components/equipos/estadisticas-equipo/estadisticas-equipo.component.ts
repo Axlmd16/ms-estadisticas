@@ -223,7 +223,7 @@ import { StatisticsService, TeamStatisticsWithInfo } from '../../../../../core/s
                                     </div>
                                     
                                     <div class="athletes-grid">
-                                        <mat-card class="athlete-card" *ngFor="let athlete of teamStatistics!.athletes; trackBy: trackByAthleteId" (click)="viewAthleteStatistics(athlete._id || athlete.id || '')">>
+                                        <mat-card class="athlete-card" *ngFor="let athlete of teamStatistics!.athletes; trackBy: trackByAthleteId" (click)="viewAthleteStatistics(athlete._id || athlete.id || '')">
                                             <mat-card-content>
                                                 <div class="athlete-avatar">
                                                     <mat-icon>person</mat-icon>
