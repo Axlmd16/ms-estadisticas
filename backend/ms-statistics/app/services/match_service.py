@@ -68,7 +68,7 @@ class MatchService:
                 "status_game": ObjectId("6886f7a1bd86bb802c751b29"),
                 "score_local": 0,
                 "score_visitor": 0,
-                "time_restant": 90,
+                "time_restant": 1,
                 "is_final": False
             }
             await self.scoreboard_repo.create(scoreboard_data)

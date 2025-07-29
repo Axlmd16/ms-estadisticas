@@ -20,6 +20,7 @@ class ScoreboardBase(BaseModel):
     is_final: Optional[bool] = None
     match_id: Optional[str] = None  
     last_update: Optional[datetime] = None
+    timer_started: Optional[bool] = False
 
 class ScoreboardCreate(ScoreboardBase):
     """

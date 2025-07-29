@@ -11,7 +11,8 @@ class Scoreboard(Document):
     score_visitor: Optional[int] = None
     time_restant: Optional[int] = None
     match_id: Optional[ObjectId] = None
-    is_final: bool = False  
+    is_final: bool = False
+    timer_started: bool = False  # Indica si el temporizador fue iniciado manualmente  
 
     async def save(self, *args, **kwargs):
         self.last_update = datetime.utcnow()

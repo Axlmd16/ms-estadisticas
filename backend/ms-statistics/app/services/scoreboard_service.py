@@ -13,6 +13,7 @@ from bson import ObjectId
 from datetime import datetime
 import logging
 import asyncio
+import aiohttp
 
 logger = logging.getLogger(__name__)
 
@@ -230,7 +231,8 @@ class ScoreboardService:
                 score_visitor=doc.score_visitor,
                 time_restant=doc.time_restant,
                 is_final=doc.is_final,
-                match_id=str(doc.match_id) if doc.match_id else None
+                match_id=str(doc.match_id) if doc.match_id else None,
+                timer_started=getattr(doc, 'timer_started', False)
             )
         except Exception as e:
             logger.error(f"Error creating scoreboard: {str(e)}")
@@ -259,7 +261,8 @@ class ScoreboardService:
                     score_visitor=scoreboard.score_visitor,
                     time_restant=scoreboard.time_restant,
                     is_final=scoreboard.is_final,
-                    match_id=str(scoreboard.match_id) if scoreboard.match_id else None
+                    match_id=str(scoreboard.match_id) if scoreboard.match_id else None,
+                    timer_started=getattr(scoreboard, 'timer_started', False)
                 ) for scoreboard in scoreboards
             ]
         except Exception as e:
@@ -295,7 +298,8 @@ class ScoreboardService:
             score_visitor=scoreboard.score_visitor,
             time_restant=scoreboard.time_restant,
             is_final=scoreboard.is_final,
-            match_id=str(scoreboard.match_id) if scoreboard.match_id else None
+            match_id=str(scoreboard.match_id) if scoreboard.match_id else None,
+            timer_started=getattr(scoreboard, 'timer_started', False)
         )
 
     async def update_scoreboard(self, scoreboard_id: PydanticObjectId, scoreboard: ScoreboardUpdate) -> ScoreboardResponse:
@@ -374,6 +378,27 @@ class ScoreboardService:
             ScoreboardUpdate(is_final=True)
         )
 
+    async def finalize_scoreboard_via_http(self, scoreboard_id: PydanticObjectId) -> None:
+        """
+        Marca un marcador como finalizado usando el endpoint HTTP.
+        Esto asegura que se ejecuten todas las acciones post-partido.
+
+        Args:
+            scoreboard_id (PydanticObjectId): ID del marcador a finalizar.
+        """
+        try:
+            async with aiohttp.ClientSession() as session:
+                url = f"http://localhost:8012/api/v1/scoreboards/{scoreboard_id}/finalize"
+                async with session.put(url) as response:
+                    if response.status == 200:
+                        logger.info(f"Scoreboard {scoreboard_id} finalized successfully via HTTP")
+                    else:
+                        logger.error(f"Failed to finalize scoreboard {scoreboard_id} via HTTP: {response.status}")
+        except Exception as e:
+            logger.error(f"Error finalizing scoreboard {scoreboard_id} via HTTP: {str(e)}")
+            # Fallback al método interno si falla la llamada HTTP
+            await self.finalize_scoreboard(scoreboard_id)
+
     async def start_game_timer(self, scoreboard_id: PydanticObjectId) -> ScoreboardResponse:
         """
         Inicia el conteo de tiempo de un partido.
@@ -400,19 +425,24 @@ class ScoreboardService:
         
         logger.info(f"Starting game timer for scoreboard {scoreboard_id}")
         
+        # Marcar que el temporizador fue iniciado
+        await self.repo.update(scoreboard_id, {"timer_started": True})
+        
         # Iniciar el timer en background
         asyncio.create_task(self._countdown_timer(scoreboard_id))
         
-        # Retornar el scoreboard actual
+        # Retornar el scoreboard actualizado
+        updated_scoreboard = await self.repo.get_by_id(scoreboard_id)
         return ScoreboardResponse(
-            id=str(scoreboard.id),
-            last_update=scoreboard.last_update,
-            status_game=str(scoreboard.status_game) if scoreboard.status_game else None,
-            score_local=scoreboard.score_local,
-            score_visitor=scoreboard.score_visitor,
-            time_restant=scoreboard.time_restant,
-            match_id=str(scoreboard.match_id) if scoreboard.match_id else None,
-            is_final=scoreboard.is_final
+            id=str(updated_scoreboard.id),
+            last_update=updated_scoreboard.last_update,
+            status_game=str(updated_scoreboard.status_game) if updated_scoreboard.status_game else None,
+            score_local=updated_scoreboard.score_local,
+            score_visitor=updated_scoreboard.score_visitor,
+            time_restant=updated_scoreboard.time_restant,
+            match_id=str(updated_scoreboard.match_id) if updated_scoreboard.match_id else None,
+            is_final=updated_scoreboard.is_final,
+            timer_started=updated_scoreboard.timer_started
         )
 
     async def _countdown_timer(self, scoreboard_id: PydanticObjectId):
@@ -433,7 +463,7 @@ class ScoreboardService:
                 # Verificar si el tiempo se agotó
                 if scoreboard.time_restant <= 0:
                     logger.info(f"Time's up! Finalizing game for scoreboard {scoreboard_id}")
-                    await self.finalize_scoreboard(scoreboard_id)
+                    await self.finalize_scoreboard_via_http(scoreboard_id)
                     break
                 
                 # Reducir el tiempo en 1 minuto

@@ -26,6 +26,7 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
   Timer? _refreshTimer;
   bool _isLoading = true;
   bool _gameStarted = false;
+  bool _timerRunning = false;
   String? _error;
   bool _showAddEventForm = false;
 
@@ -58,14 +59,17 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
       });
 
       final scoreboard = await _matchService.getScoreboard(widget.scoreboardId);
+      
       setState(() {
         _scoreboard = scoreboard;
-        _gameStarted = scoreboard['time_restant'] < 90; // Si el tiempo es menor a 90, ya empezó
+        // El botón aparece si no está finalizado y el temporizador no ha sido iniciado
+        _timerRunning = scoreboard['timer_started'] ?? false;
+        _gameStarted = _timerRunning; // Solo para compatibilidad con otras partes del código
         _isLoading = false;
       });
 
-      // Si el juego ya empezó, iniciar actualización automática
-      if (_gameStarted && !(_scoreboard!['is_final'] ?? false)) {
+      // Si el temporizador está corriendo, iniciar actualización automática
+      if (_timerRunning && !(_scoreboard!['is_final'] ?? false)) {
         _startRealTimeUpdates();
       }
     } catch (e) {
@@ -138,6 +142,7 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
       
       setState(() {
         _gameStarted = true;
+        _timerRunning = true;
         _isLoading = false;
       });
 
@@ -393,7 +398,7 @@ class _ScoreboardPageState extends State<ScoreboardPage> {
             const SizedBox(height: 20),
             _buildGameStatus(),
             const SizedBox(height: 20),
-            if (!_gameStarted && !(_scoreboard!['is_final'] ?? false))
+            if (!(_scoreboard!['is_final'] ?? false) && !_timerRunning)
               _buildStartButton(),
             const SizedBox(height: 20),
             _buildEventsSection(),

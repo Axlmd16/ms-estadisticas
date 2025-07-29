@@ -406,4 +406,41 @@ class MatchService {
       throw Exception('Error de conexión: $e');
     }
   }
+
+  // Iniciar el temporizador del partido
+  Future<Map<String, dynamic>> startGame(String scoreboardId) async {
+    try {
+      print('🔄 Iniciando partido para scoreboard: $scoreboardId');
+      
+      final body = {
+        'start_game': true,
+      };
+      
+      print('📤 Body de la petición: $body');
+      
+      final response = await http.post(
+        Uri.parse('$baseUrl/scoreboards/$scoreboardId/start-game'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(body),
+      );
+
+      print('📡 Respuesta recibida - Status Code: ${response.statusCode}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = json.decode(response.body);
+        print('✅ Partido iniciado exitosamente');
+        print('📋 Datos del scoreboard: $data');
+        return data;
+      } else {
+        print('❌ Error del servidor: ${response.statusCode}');
+        print('📄 Respuesta: ${response.body}');
+        throw Exception('Error del servidor: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('💥 Error en startGame: $e');
+      throw Exception('Error de conexión: $e');
+    }
+  }
 }
