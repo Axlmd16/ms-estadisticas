@@ -5,7 +5,8 @@ Incluye la lógica para crear, listar, obtener, actualizar y eliminar partidos, 
 """
 
 from app.repositories.match_repository import MatchRepository
-from app.schemas.match_schema import MatchCreate, MatchUpdate, MatchResponse
+from app.repositories.team_repository import TeamRepository
+from app.schemas.match_schema import MatchCreate, MatchUpdate, MatchResponse, MatchWithTeamsResponse, TeamInfo
 from beanie import PydanticObjectId
 from fastapi import HTTPException, status
 from bson import ObjectId
@@ -19,9 +20,10 @@ class MatchService:
     """
     def __init__(self):
         """
-        Inicializa el servicio con una instancia del repositorio de partidos.
+        Inicializa el servicio con instancias de los repositorios de partidos y equipos.
         """
         self.repo = MatchRepository()
+        self.team_repo = TeamRepository()
 
     def _convert_string_ids_to_objectid(self, data: dict) -> dict:
         """
@@ -95,6 +97,62 @@ class MatchService:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Error retrieving matches"
+            )
+
+    async def list_matches_with_teams(self) -> list[MatchWithTeamsResponse]:
+        """
+        Obtiene la lista de todos los partidos con información completa de los equipos.
+
+        Returns:
+            list[MatchWithTeamsResponse]: Lista de partidos con información de equipos.
+        Raises:
+            HTTPException: Si ocurre un error al obtener los partidos.
+        """
+        try:
+            matches = await self.repo.list()
+            result = []
+            
+            for match in matches:
+                # Obtener información del equipo local
+                local_team = None
+                if match.local_team_id:
+                    local_team_doc = await self.team_repo.get_by_id(match.local_team_id)
+                    if local_team_doc:
+                        local_team = TeamInfo(
+                            id=str(local_team_doc.id),
+                            name=local_team_doc.name,
+                            description=local_team_doc.description,
+                            founded=local_team_doc.founded
+                        )
+                
+                # Obtener información del equipo visitante
+                visitor_team = None
+                if match.visitor_team_id:
+                    visitor_team_doc = await self.team_repo.get_by_id(match.visitor_team_id)
+                    if visitor_team_doc:
+                        visitor_team = TeamInfo(
+                            id=str(visitor_team_doc.id),
+                            name=visitor_team_doc.name,
+                            description=visitor_team_doc.description,
+                            founded=visitor_team_doc.founded
+                        )
+                
+                # Crear el match con información de equipos
+                match_with_teams = MatchWithTeamsResponse(
+                    id=str(match.id),
+                    season_id=str(match.season_id) if match.season_id else None,
+                    local_team=local_team,
+                    visitor_team=visitor_team,
+                    date=match.date
+                )
+                result.append(match_with_teams)
+            
+            return result
+        except Exception as e:
+            logger.error(f"Error listing matches with teams: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error retrieving matches with teams"
             )
 
     async def get_match(self, match_id: PydanticObjectId) -> MatchResponse:

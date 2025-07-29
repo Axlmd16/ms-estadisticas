@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
 from typing import List
-from app.schemas.match_schema import MatchCreate, MatchUpdate, MatchResponse
+from app.schemas.match_schema import MatchCreate, MatchUpdate, MatchResponse, MatchWithTeamsResponse
 from beanie import PydanticObjectId
 from app.services.match_service import match_service
 
@@ -27,6 +27,16 @@ async def list_matches():
         List[MatchResponse]: Lista de partidos.
     """
     return await match_service.list_matches()
+
+@router.get("/with-teams", response_model=List[MatchWithTeamsResponse])
+async def list_matches_with_teams():
+    """
+    Obtiene la lista de todos los partidos con información completa de los equipos.
+
+    Returns:
+        List[MatchWithTeamsResponse]: Lista de partidos con información de equipos.
+    """
+    return await match_service.list_matches_with_teams()
 
 @router.get("/{match_id}", response_model=MatchResponse)
 async def get_match(match_id: PydanticObjectId):

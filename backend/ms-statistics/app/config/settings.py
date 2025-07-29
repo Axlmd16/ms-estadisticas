@@ -15,10 +15,10 @@ class Settings(BaseSettings):
     """
     Clase de configuración que carga y valida las variables de entorno necesarias para la aplicación.
     """
-    MONGO_URL: str = os.getenv("MONGO_URL")
-    JWT_SECRET: str = os.getenv("JWT_SECRET")
-    JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM")
-    CORS_ORIGINS: str = os.getenv("CORS_ORIGINS")
-    TIMEZONE: str = os.getenv("TIMEZONE")
+    MONGO_URL: str = os.getenv("MONGO_URL", "mongodb://mongo:27017/statistics")
+    JWT_SECRET: str = os.getenv("JWT_SECRET", "your_secret_here")
+    JWT_ALGORITHM: str = os.getenv("JWT_ALGORITHM", "HS256")
+    CORS_ORIGINS: str = os.getenv("CORS_ORIGINS", "*")
+    TIMEZONE: str = os.getenv("TIMEZONE", "UTC")
 
 settings = Settings()
