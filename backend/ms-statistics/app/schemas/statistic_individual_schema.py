@@ -19,28 +19,24 @@ class AthleteInfo(BaseModel):
 class StatisticIndividualBase(BaseModel):
     """
     Modelo base para una estadística individual de atleta, utilizado para heredar atributos comunes.
+    Solo incluye eventos reales del juego, no métricas de rendimiento.
     """
     description: Optional[str] = None
     date_generation: Optional[datetime] = None
     value: Optional[float] = None
     id_athlete: Optional[str] = None
+    # Eventos ofensivos
     goals: Optional[int] = None
     assists: Optional[int] = None
-    yellow_cards: Optional[int] = None
-    red_cards: Optional[int] = None
-    games_played: Optional[int] = None
-    fouls_committed: Optional[int] = None
-    fouls_received: Optional[int] = None
-    offsides: Optional[int] = None
-    saves: Optional[int] = None
-    passes_completed: Optional[int] = None
-    passes_attempted: Optional[int] = None
     shots_on_target: Optional[int] = None
     shots_off_target: Optional[int] = None
-    distance_covered: Optional[float] = None
-    top_speed: Optional[float] = None
-    average_speed: Optional[float] = None
-    time_played: Optional[int] = None
+    # Eventos disciplinarios
+    yellow_cards: Optional[int] = None
+    red_cards: Optional[int] = None
+    fouls_committed: Optional[int] = None
+    fouls_received: Optional[int] = None
+    # Otros eventos del juego
+    offsides: Optional[int] = None
     # Campos de compatibilidad (deprecated)
     goal: Optional[int] = None
     own_goal: Optional[int] = None
@@ -60,24 +56,20 @@ class StatisticIndividualUpdate(StatisticIndividualBase):
     """
     Modelo para la actualización parcial de una estadística individual.
     Todos los campos son opcionales para permitir actualizaciones parciales.
+    Solo incluye eventos reales del juego.
     """
+    # Eventos ofensivos
     goals: Optional[int] = None
     assists: Optional[int] = None
-    yellow_cards: Optional[int] = None
-    red_cards: Optional[int] = None
-    games_played: Optional[int] = None
-    fouls_committed: Optional[int] = None
-    fouls_received: Optional[int] = None
-    offsides: Optional[int] = None
-    saves: Optional[int] = None
-    passes_completed: Optional[int] = None
-    passes_attempted: Optional[int] = None
     shots_on_target: Optional[int] = None
     shots_off_target: Optional[int] = None
-    distance_covered: Optional[float] = None
-    top_speed: Optional[float] = None
-    average_speed: Optional[float] = None
-    time_played: Optional[int] = None
+    # Eventos disciplinarios
+    yellow_cards: Optional[int] = None
+    red_cards: Optional[int] = None
+    fouls_committed: Optional[int] = None
+    fouls_received: Optional[int] = None
+    # Otros eventos del juego
+    offsides: Optional[int] = None
     # Campos de compatibilidad (deprecated)
     goal: Optional[int] = None
     own_goal: Optional[int] = None
@@ -90,7 +82,7 @@ class StatisticIndividualResponse(StatisticIndividualBase):
     Modelo de respuesta para representar una estadística individual con su ID.
     Convierte ObjectId a string y usa el alias '_id'.
     """
-    id: str = Field(alias="_id")
+    id: Optional[str] = Field(alias="_id", default=None)
 
     @field_validator("id", mode="before")
     @classmethod
@@ -124,6 +116,8 @@ class StatisticIndividualResponse(StatisticIndividualBase):
     model_config = {
         "populate_by_name": True,
         "arbitrary_types_allowed": True,
+        # Excluir campos None en la serialización JSON
+        "exclude_none": True,
     }
 
 class StatisticIndividualWithAthleteResponse(StatisticIndividualBase):
@@ -149,4 +143,6 @@ class StatisticIndividualWithAthleteResponse(StatisticIndividualBase):
     model_config = {
         "populate_by_name": True,
         "arbitrary_types_allowed": True,
+        # Excluir campos None en la serialización JSON
+        "exclude_none": True,
     }

@@ -28,7 +28,7 @@ export interface TableRatingWithTeams {
 
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, forkJoin } from 'rxjs';
 import { map, tap, catchError } from 'rxjs/operators';
 
 import {
@@ -808,24 +808,48 @@ export class StatisticsService {
      * Obtiene las estadísticas de un atleta específico con información completa del atleta
      */
     getAthleteStatistics(athleteId: string): Observable<StatisticsIndividualWithAthlete> {
-        console.log('🏃‍♂️ Fetching athlete statistics for ID:', athleteId);
-        console.log('🌐 API URL will be:', `http://localhost:8012/api/v1/statistics/individual/by-athlete/${athleteId}`);
-        
+        // Primero intentamos el endpoint principal que ya funciona
         return this.http.get<StatisticsIndividualWithAthlete>(`http://localhost:8012/api/v1/statistics/individual/by-athlete/${athleteId}`)
             .pipe(
                 tap(response => {
-                    console.log('✅ Successfully fetched athlete statistics:', response);
-                    console.log('👤 Athlete info:', response.athlete);
-                    console.log('📊 Statistics data available');
+                    console.log('✅ Estadísticas del atleta obtenidas:', response);
                 }),
                 catchError(error => {
-                    console.error('❌ Error fetching athlete statistics:', error);
-                    console.error('📍 Error details:', {
-                        status: error.status,
-                        statusText: error.statusText,
-                        url: error.url,
-                        message: error.message
-                    });
+                    console.error('❌ Error fetching athlete statistics from main endpoint:', error);
+                    // Si falla, obtenemos la información del atleta y las estadísticas por separado
+                    return forkJoin({
+                        athlete: this.http.get<Athlete>(`${this.athletesApiUrl}/${athleteId}`),
+                        stats: this.http.get<StatisticsIndividual>(`http://localhost:8012/api/v1/statistics/individual/athlete/${athleteId}/calculate`)
+                    }).pipe(
+                        map(({ athlete, stats }) => {
+                            // Combinamos la información del atleta con las estadísticas calculadas
+                            return {
+                                ...stats,
+                                athlete: {
+                                    id: athlete._id || athlete.id || athleteId,
+                                    name: athlete.name,
+                                    position: athlete.position,
+                                    team_id: athlete.team_id
+                                }
+                            } as StatisticsIndividualWithAthlete;
+                        }),
+                        catchError(fallbackError => {
+                            console.error('❌ Error in fallback method:', fallbackError);
+                            throw error; // Lanzamos el error original
+                        })
+                    );
+                })
+            );
+    }
+
+    /**
+     * Calcula las estadísticas de un atleta basándose en todos sus eventos de match
+     */
+    calculateAthleteStatisticsFromEvents(athleteId: string): Observable<StatisticsIndividual> {
+        return this.http.get<StatisticsIndividual>(`http://localhost:8012/api/v1/statistics/individual/athlete/${athleteId}/calculate`)
+            .pipe(
+                catchError(error => {
+                    console.error('❌ Error calculating athlete statistics from events:', error);
                     throw error;
                 })
             );

@@ -33,6 +33,20 @@ async def list_statistics():
     """
     return await statistic_individual_service.list_statistics()
 
+@router.get("/athlete/{athlete_id}/calculate", response_model=StatisticIndividualResponse)
+async def calculate_athlete_statistics_from_events(
+    athlete_id: str = Path(..., description="ID del atleta para calcular estadísticas")
+):
+    """
+    Calcula las estadísticas de un atleta basándose en todos sus eventos de match.
+
+    Args:
+        athlete_id (str): ID del atleta.
+    Returns:
+        StatisticIndividualResponse: Estadísticas calculadas del atleta basadas en eventos.
+    """
+    return await statistic_individual_service.calculate_statistics_from_events(athlete_id)
+
 @router.get("/{stat_id}", response_model=StatisticIndividualResponse)
 async def get_statistic(stat_id: PydanticObjectId):
     """

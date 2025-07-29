@@ -38,47 +38,40 @@ import { StatisticsService, StatisticsIndividualWithAthlete } from '../../../../
                         <mat-icon>arrow_back</mat-icon>
                         Volver
                     </button>
+                    <button mat-raised-button 
+                            color="primary" 
+                            (click)="calculateStatisticsFromEvents()" 
+                            [disabled]="isLoading"
+                            class="calculate-button">
+                        <mat-icon>calculate</mat-icon>
+                        Calcular desde Eventos
+                    </button>
                 </mat-card-actions>
             </mat-card>
 
             <!-- Resumen rápido de estadísticas -->
             <div class="quick-stats">
-                <mat-card class="quick-stat-card">
+                <mat-card class="quick-stat-card" *ngFor="let field of getQuickStatsFields()">
                     <mat-card-content>
-                        <mat-icon>sports_soccer</mat-icon>
+                        <mat-icon>{{ getIconForField(field.key) }}</mat-icon>
                         <div class="quick-stat-info">
-                            <div class="quick-stat-value">{{ getFieldValue('goal') }}</div>
-                            <div class="quick-stat-label">Goles</div>
+                            <div class="quick-stat-value">{{ field.value }}</div>
+                            <div class="quick-stat-label">{{ getFieldLabel(field.key) }}</div>
                         </div>
                     </mat-card-content>
                 </mat-card>
-                <mat-card class="quick-stat-card">
-                    <mat-card-content>
-                        <mat-icon>assistant</mat-icon>
-                        <div class="quick-stat-info">
-                            <div class="quick-stat-value">{{ getFieldValue('assists') }}</div>
-                            <div class="quick-stat-label">Asistencias</div>
-                        </div>
-                    </mat-card-content>
-                </mat-card>
-                <mat-card class="quick-stat-card">
-                    <mat-card-content>
-                        <mat-icon>timer</mat-icon>
-                        <div class="quick-stat-info">
-                            <div class="quick-stat-value">{{ getFieldValue('time_played') }}</div>
-                            <div class="quick-stat-label">Min. Jugados</div>
-                        </div>
-                    </mat-card-content>
-                </mat-card>
-                <mat-card class="quick-stat-card">
-                    <mat-card-content>
-                        <mat-icon>warning</mat-icon>
-                        <div class="quick-stat-info">
-                            <div class="quick-stat-value">{{ getFieldValue('yellow_card') }}</div>
-                            <div class="quick-stat-label">T. Amarillas</div>
-                        </div>
-                    </mat-card-content>
-                </mat-card>
+                <!-- Mostrar mensaje si no hay estadísticas -->
+                <div *ngIf="getQuickStatsFields().length === 0" class="no-stats-message">
+                    <mat-card class="quick-stat-card">
+                        <mat-card-content>
+                            <mat-icon>info</mat-icon>
+                            <div class="quick-stat-info">
+                                <div class="quick-stat-value">Sin datos</div>
+                                <div class="quick-stat-label">Prueba "Calcular desde Eventos"</div>
+                            </div>
+                        </mat-card-content>
+                    </mat-card>
+                </div>
             </div>
 
             <!-- Información detallada con pestañas -->
@@ -129,92 +122,39 @@ import { StatisticsService, StatisticsIndividualWithAthlete } from '../../../../
 
                 <mat-tab label="📊 Estadísticas Completas">
                     <div class="tab-content">
-                        <div class="tab-cards-grid">
-                            <!-- Estadísticas Ofensivas -->
-                            <mat-card class="stats-category-card">
+                        <div class="tab-cards-grid" *ngIf="getBackendFields().length > 0">
+                            <!-- Estadísticas Dinámicas por Categoría -->
+                            <mat-card class="stats-category-card" *ngFor="let category of getStatsByCategory()">
                                 <mat-card-header>
-                                    <mat-card-title>⚽ Estadísticas Ofensivas</mat-card-title>
+                                    <mat-card-title>{{ category.icon }} {{ category.title }}</mat-card-title>
                                 </mat-card-header>
                                 <mat-card-content>
                                     <div class="stats-list">
-                                        <div class="stat-row">
-                                            <mat-icon>sports_soccer</mat-icon>
-                                            <span class="stat-name">Goles</span>
-                                            <span class="stat-value">{{ getFieldValue('goal') }}</span>
-                                        </div>
-                                        <div class="stat-row">
-                                            <mat-icon>assistant</mat-icon>
-                                            <span class="stat-name">Asistencias</span>
-                                            <span class="stat-value">{{ getFieldValue('assists') }}</span>
-                                        </div>
-                                        <div class="stat-row">
-                                            <mat-icon>sports_soccer</mat-icon>
-                                            <span class="stat-name">Tiros</span>
-                                            <span class="stat-value">{{ getFieldValue('shots') }}</span>
+                                        <div class="stat-row" *ngFor="let field of category.fields">
+                                            <mat-icon [class]="getStatClass(field.key)">{{ getIconForField(field.key) }}</mat-icon>
+                                            <span class="stat-name">{{ getFieldLabel(field.key) }}</span>
+                                            <span class="stat-value">{{ field.value }}</span>
                                         </div>
                                     </div>
                                 </mat-card-content>
                             </mat-card>
-
-                            <!-- Estadísticas Defensivas -->
-                            <mat-card class="stats-category-card">
-                                <mat-card-header>
-                                    <mat-card-title>🛡️ Estadísticas Defensivas</mat-card-title>
-                                </mat-card-header>
+                        </div>
+                        
+                        <!-- Mensaje cuando no hay estadísticas -->
+                        <div *ngIf="getBackendFields().length === 0" class="no-stats-container">
+                            <mat-card class="no-stats-card">
                                 <mat-card-content>
-                                    <div class="stats-list">
-                                        <div class="stat-row">
-                                            <mat-icon>sports_kabaddi</mat-icon>
-                                            <span class="stat-name">Entradas</span>
-                                            <span class="stat-value">{{ getFieldValue('tackles') }}</span>
-                                        </div>
-                                        <div class="stat-row">
-                                            <mat-icon>sports_volleyball</mat-icon>
-                                            <span class="stat-name">Atajadas</span>
-                                            <span class="stat-value">{{ getFieldValue('saves') }}</span>
-                                        </div>
-                                        <div class="stat-row">
-                                            <mat-icon>swap_horiz</mat-icon>
-                                            <span class="stat-name">Pases</span>
-                                            <span class="stat-value">{{ getFieldValue('passes') }}</span>
-                                        </div>
-                                    </div>
-                                </mat-card-content>
-                            </mat-card>
-
-                            <!-- Disciplina -->
-                            <mat-card class="stats-category-card">
-                                <mat-card-header>
-                                    <mat-card-title>⚠️ Disciplina</mat-card-title>
-                                </mat-card-header>
-                                <mat-card-content>
-                                    <div class="stats-list">
-                                        <div class="stat-row">
-                                            <mat-icon class="yellow-card">warning</mat-icon>
-                                            <span class="stat-name">Tarjetas Amarillas</span>
-                                            <span class="stat-value">{{ getFieldValue('yellow_card') }}</span>
-                                        </div>
-                                        <div class="stat-row">
-                                            <mat-icon class="red-card">error</mat-icon>
-                                            <span class="stat-name">Tarjetas Rojas</span>
-                                            <span class="stat-value">{{ getFieldValue('red_card') }}</span>
-                                        </div>
-                                    </div>
-                                </mat-card-content>
-                            </mat-card>
-
-                            <!-- Tiempo de Juego -->
-                            <mat-card class="stats-category-card">
-                                <mat-card-header>
-                                    <mat-card-title>⏱️ Tiempo de Juego</mat-card-title>
-                                </mat-card-header>
-                                <mat-card-content>
-                                    <div class="stats-list">
-                                        <div class="stat-row">
-                                            <mat-icon>timer</mat-icon>
-                                            <span class="stat-name">Minutos Jugados</span>
-                                            <span class="stat-value">{{ getFieldValue('time_played') }}</span>
-                                        </div>
+                                    <div class="no-stats-content">
+                                        <mat-icon>trending_up</mat-icon>
+                                        <h3>Sin estadísticas disponibles</h3>
+                                        <p>Este jugador aún no tiene estadísticas registradas.</p>
+                                        <button mat-raised-button 
+                                                color="primary" 
+                                                (click)="calculateStatisticsFromEvents()"
+                                                [disabled]="isLoading">
+                                            <mat-icon>calculate</mat-icon>
+                                            Calcular desde Eventos
+                                        </button>
                                     </div>
                                 </mat-card-content>
                             </mat-card>
@@ -683,55 +623,95 @@ export class JugadorDetalleComponent implements OnInit {
             next: (jugador) => {
                 this.jugador = jugador;
                 this.isLoading = false;
-                console.log('📊 BACKEND DATA RECEIVED:');
-                console.log('👤 Athlete info:', jugador.athlete);
-                console.log('� Statistics fields from backend (excluding athlete id):');
-                Object.keys(jugador).forEach(key => {
-                    if (key !== 'athlete_id') { // Excluir el ID del jugador
-                        console.log(`  ${key}: ${(jugador as any)[key]}`);
-                    }
-                });
-                console.log('🎯 Available backend fields:', Object.keys(jugador).filter(key => key !== 'athlete_id'));
+                console.log('📊 Estadísticas individuales del jugador:', jugador);
             },
             error: (error) => {
                 this.error = error.message || 'Error al cargar las estadísticas del jugador';
                 this.isLoading = false;
-                console.error('❌ Error loading athlete statistics:', error);
             },
         });
     }
 
-    // Método para obtener solo los campos que vienen del backend (excluyendo athlete_id, id y fechas)
+    /**
+     * Calcula las estadísticas del jugador basándose en sus eventos de match
+     */
+    calculateStatisticsFromEvents() {
+        if (!this.jugadorId) {
+            return;
+        }
+
+        this.isLoading = true;
+        this.error = null;
+
+        this.statisticsService.calculateAthleteStatisticsFromEvents(this.jugadorId).subscribe({
+            next: (calculatedStats) => {
+                // Actualizar las estadísticas del jugador manteniendo la información del atleta
+                if (this.jugador && this.jugador.athlete) {
+                    // Mantener la información del atleta
+                    const athleteInfo = this.jugador.athlete;
+                    
+                    // Actualizar las estadísticas calculadas
+                    this.jugador = {
+                        ...calculatedStats,
+                        athlete: athleteInfo
+                    } as StatisticsIndividualWithAthlete;
+                } else {
+                    // Si no hay información del atleta, recargar las estadísticas completas
+                    this.loadJugadorStatistics(this.jugadorId);
+                    return;
+                }
+                
+                this.isLoading = false;
+                console.log('📊 Estadísticas individuales del jugador (calculadas desde eventos):', this.jugador);
+            },
+            error: (error) => {
+                this.error = error.message || 'Error al calcular las estadísticas desde eventos';
+                this.isLoading = false;
+            },
+        });
+    }
+
+    // Método para obtener solo los campos esenciales (excluyendo athlete_id, id y fechas)
     getBackendFields(): { key: string, value: any }[] {
         if (!this.jugador) return [];
         
-        return Object.keys(this.jugador)
-            .filter(key => 
-                key !== 'athlete_id' && 
-                key !== 'athlete' && 
-                key !== 'id' && 
-                !key.includes('date') && 
-                !key.includes('created') && 
-                !key.includes('updated')
-            ) // Excluir IDs, athlete y fechas
-            .map(key => ({
-                key: key,
-                value: (this.jugador as any)[key] || 0
-            }));
+        // Lista de campos que realmente son eventos del juego (solo campos nuevos, no deprecated)
+        const gameEventFields = [
+            'goals', 'assists', 'yellow_cards', 'red_cards', 
+            'fouls_committed', 'fouls_received', 'offsides',
+            'shots_on_target', 'shots_off_target'
+            // Excluidos los campos deprecated: 'goal', 'own_goal', 'foul', 'red_card', 'yellow_card'
+        ];
+        
+        const fields: { key: string, value: any }[] = [];
+        
+        // Obtener solo los campos que son eventos del juego
+        gameEventFields.forEach(field => {
+            if (this.jugador && field in this.jugador) {
+                const value = (this.jugador as any)[field];
+                // Convertir null a 0 para mostrar
+                fields.push({ 
+                    key: field, 
+                    value: value !== null ? value : 0 
+                });
+            }
+        });
+        
+        return fields;
     }
 
     // Método para obtener el ícono apropiado para cada campo
     getIconForField(fieldKey: string): string {
         const iconMap: { [key: string]: string } = {
-            'goal': 'sports_soccer',
+            'goals': 'sports_soccer',
             'assists': 'assistant',
-            'time_played': 'timer',
-            'yellow_card': 'warning',
-            'red_card': 'error',
-            'shots': 'sports_soccer',
-            'passes': 'swap_horiz',
-            'tackles': 'sports_kabaddi',
-            'saves': 'sports_volleyball'
+            'yellow_cards': 'warning',
+            'red_cards': 'error',
+            'offsides': 'flag',
+            'fouls_committed': 'sports_kabaddi',
+            'fouls_received': 'sports_kabaddi',
+            'shots_on_target': 'gps_fixed',
+            'shots_off_target': 'gps_off'
         };
         return iconMap[fieldKey] || 'bar_chart';
     }
@@ -739,15 +719,15 @@ export class JugadorDetalleComponent implements OnInit {
     // Método para obtener la etiqueta en español para cada campo
     getFieldLabel(fieldKey: string): string {
         const labelMap: { [key: string]: string } = {
-            'goal': 'Goles',
+            'goals': 'Goles',
             'assists': 'Asistencias',
-            'time_played': 'Minutos Jugados',
-            'yellow_card': 'Tarjetas Amarillas',
-            'red_card': 'Tarjetas Rojas',
-            'shots': 'Tiros',
-            'passes': 'Pases',
-            'tackles': 'Entradas',
-            'saves': 'Atajadas'
+            'yellow_cards': 'Tarjetas Amarillas',
+            'red_cards': 'Tarjetas Rojas',
+            'offsides': 'Fuera de Lugar',
+            'fouls_committed': 'Faltas Cometidas',
+            'fouls_received': 'Faltas Recibidas',
+            'shots_on_target': 'Tiros al Arco',
+            'shots_off_target': 'Tiros Desviados'
         };
         return labelMap[fieldKey] || fieldKey.replace('_', ' ').toUpperCase();
     }
@@ -756,9 +736,92 @@ export class JugadorDetalleComponent implements OnInit {
         this.router.navigate(['/estadisticas/jugadores']);
     }
 
-    // Método para obtener valor de un campo específico
+    getStatClass(field: string): string {
+        if (field.includes('yellow')) return 'yellow-card';
+        if (field.includes('red')) return 'red-card';
+        return '';
+    }
+
+    getQuickStatsFields(): Array<{key: string, value: any}> {
+        if (!this.jugador) return [];
+        
+        // Usar solo eventos del juego para quick stats (solo campos nuevos, no deprecated)
+        const priorityFields = ['goals', 'assists', 'yellow_cards', 'red_cards'];
+        const fields: Array<{key: string, value: any}> = [];
+        
+        priorityFields.forEach(field => {
+            if (this.jugador && field in this.jugador) {
+                let value = (this.jugador as any)[field];
+                // Convertir null a 0 para mostrar
+                value = value !== null ? value : 0;
+                fields.push({ key: field, value });
+            }
+        });
+        
+        // Si no encontramos suficientes campos, agregar algunos adicionales que son eventos
+        if (fields.length < 4) {
+            const additionalFields = ['shots_on_target', 'offsides', 'fouls_committed', 'shots_off_target'];
+            additionalFields.forEach(field => {
+                if (fields.length < 4 && this.jugador && field in this.jugador) {
+                    const exists = fields.some(f => f.key === field);
+                    if (!exists) {
+                        let value = (this.jugador as any)[field];
+                        value = value !== null ? value : 0;
+                        fields.push({ key: field, value });
+                    }
+                }
+            });
+        }
+        
+        return fields.slice(0, 4); // Máximo 4 para quick stats
+    }
+
+    getStatsByCategory(): Array<{title: string, icon: string, fields: Array<{key: string, value: any}>}> {
+        const backendFields = this.getBackendFields();
+        if (backendFields.length === 0) return [];
+
+        const categories: { [key: string]: {title: string, icon: string, fields: string[]} } = {
+            offensive: {
+                title: 'Eventos Ofensivos',
+                icon: '⚽',
+                fields: ['goal', 'goals', 'assists', 'shots_on_target', 'shots_off_target', 'own_goal']
+            },
+            disciplinary: {
+                title: 'Eventos Disciplinarios',
+                icon: '⚠️',
+                fields: ['yellow_card', 'yellow_cards', 'red_card', 'red_cards', 'foul_committed', 'foul_received', 'foul']
+            },
+            other: {
+                title: 'Otros Eventos del Juego',
+                icon: '📊',
+                fields: ['offsides']
+            }
+        };
+
+        const result: Array<{title: string, icon: string, fields: Array<{key: string, value: any}>}> = [];
+
+        Object.keys(categories).forEach(categoryKey => {
+            const category = categories[categoryKey];
+            const categoryFields = backendFields.filter(field => 
+                category.fields.includes(field.key)
+            );
+
+            if (categoryFields.length > 0) {
+                result.push({
+                    title: category.title,
+                    icon: category.icon,
+                    fields: categoryFields
+                });
+            }
+        });
+
+        return result;
+    }
+
+    // Método para obtener valor de un campo específico - solo mostrar si existe y > 0
     getFieldValue(fieldKey: string): any {
-        if (!this.jugador) return 0;
-        return (this.jugador as any)[fieldKey] || 0;
+        if (!this.jugador) return '-';
+        const value = (this.jugador as any)[fieldKey];
+        return (value != null && value > 0) ? value : '-';
     }
 }
