@@ -12,6 +12,7 @@ from fastapi import HTTPException, status
 from bson import ObjectId
 from datetime import datetime
 import logging
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -372,5 +373,82 @@ class ScoreboardService:
             scoreboard_id, 
             ScoreboardUpdate(is_final=True)
         )
+
+    async def start_game_timer(self, scoreboard_id: PydanticObjectId) -> ScoreboardResponse:
+        """
+        Inicia el conteo de tiempo de un partido.
+
+        Args:
+            scoreboard_id (PydanticObjectId): ID del marcador.
+        Returns:
+            ScoreboardResponse: Marcador actualizado.
+        """
+        # Verificar que el scoreboard existe
+        scoreboard = await self.repo.get_by_id(scoreboard_id)
+        if not scoreboard:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND, 
+                detail="Scoreboard not found"
+            )
+        
+        # Verificar que el partido no esté ya finalizado
+        if scoreboard.is_final:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Game is already finished"
+            )
+        
+        logger.info(f"Starting game timer for scoreboard {scoreboard_id}")
+        
+        # Iniciar el timer en background
+        asyncio.create_task(self._countdown_timer(scoreboard_id))
+        
+        # Retornar el scoreboard actual
+        return ScoreboardResponse(
+            id=str(scoreboard.id),
+            last_update=scoreboard.last_update,
+            status_game=str(scoreboard.status_game) if scoreboard.status_game else None,
+            score_local=scoreboard.score_local,
+            score_visitor=scoreboard.score_visitor,
+            time_restant=scoreboard.time_restant,
+            match_id=str(scoreboard.match_id) if scoreboard.match_id else None,
+            is_final=scoreboard.is_final
+        )
+
+    async def _countdown_timer(self, scoreboard_id: PydanticObjectId):
+        """
+        Ejecuta el conteo regresivo del tiempo de partido.
+        
+        Args:
+            scoreboard_id (PydanticObjectId): ID del marcador.
+        """
+        try:
+            while True:
+                # Obtener el scoreboard actual
+                scoreboard = await self.repo.get_by_id(scoreboard_id)
+                if not scoreboard or scoreboard.is_final:
+                    logger.info(f"Timer stopped for scoreboard {scoreboard_id} - Game finished or not found")
+                    break
+                
+                # Verificar si el tiempo se agotó
+                if scoreboard.time_restant <= 0:
+                    logger.info(f"Time's up! Finalizing game for scoreboard {scoreboard_id}")
+                    await self.finalize_scoreboard(scoreboard_id)
+                    break
+                
+                # Reducir el tiempo en 1 minuto
+                new_time = scoreboard.time_restant - 1
+                await self.update_scoreboard(
+                    scoreboard_id,
+                    ScoreboardUpdate(time_restant=new_time)
+                )
+                
+                logger.info(f"Scoreboard {scoreboard_id} - Time remaining: {new_time} minutes")
+                
+                # Esperar 60 segundos (1 minuto)
+                await asyncio.sleep(60)
+                
+        except Exception as e:
+            logger.error(f"Error in countdown timer for scoreboard {scoreboard_id}: {str(e)}")
 
 scoreboard_service = ScoreboardService()

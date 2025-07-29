@@ -3,8 +3,12 @@ from typing import List
 from app.schemas.scoreboard_schema import ScoreboardCreate, ScoreboardUpdate, ScoreboardResponse
 from beanie import PydanticObjectId
 from app.services.scoreboard_service import scoreboard_service
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/v1/scoreboards", tags=["Scoreboards"])
+
+class StartGameRequest(BaseModel):
+    start_game: bool
 
 @router.post("/", response_model=ScoreboardResponse, status_code=status.HTTP_201_CREATED)
 async def create_scoreboard(scoreboard: ScoreboardCreate):
@@ -80,6 +84,31 @@ async def finalize_scoreboard(scoreboard_id: PydanticObjectId):
         HTTPException: Si el marcador no existe.
     """
     scoreboard = await scoreboard_service.finalize_scoreboard(scoreboard_id)
+    if not scoreboard:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Scoreboard not found")
+    return scoreboard
+
+# Nuevo endpoint para iniciar el partido
+@router.post("/{scoreboard_id}/start-game", response_model=ScoreboardResponse)
+async def start_game(scoreboard_id: PydanticObjectId, request: StartGameRequest):
+    """
+    Inicia el conteo de tiempo de un partido.
+
+    Args:
+        scoreboard_id (PydanticObjectId): ID del marcador.
+        request (StartGameRequest): Objeto con el boolean start_game.
+    Returns:
+        ScoreboardResponse: Marcador con el tiempo iniciado.
+    Raises:
+        HTTPException: Si el marcador no existe o si start_game no es True.
+    """
+    if not request.start_game:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, 
+            detail="start_game must be True to start the game"
+        )
+    
+    scoreboard = await scoreboard_service.start_game_timer(scoreboard_id)
     if not scoreboard:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Scoreboard not found")
     return scoreboard

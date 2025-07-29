@@ -6,6 +6,7 @@ Incluye la lógica para crear, listar, obtener, actualizar y eliminar partidos, 
 
 from app.repositories.match_repository import MatchRepository
 from app.repositories.team_repository import TeamRepository
+from app.repositories.scoreboard_repository import ScoreboardRepository
 from app.schemas.match_schema import MatchCreate, MatchUpdate, MatchResponse, MatchWithTeamsResponse, TeamInfo
 from beanie import PydanticObjectId
 from fastapi import HTTPException, status
@@ -24,6 +25,7 @@ class MatchService:
         """
         self.repo = MatchRepository()
         self.team_repo = TeamRepository()
+        self.scoreboard_repo = ScoreboardRepository()
 
     def _convert_string_ids_to_objectid(self, data: dict) -> dict:
         """
@@ -45,7 +47,7 @@ class MatchService:
 
     async def create_match(self, match: MatchCreate) -> MatchResponse:
         """
-        Crea un nuevo partido en la base de datos.
+        Crea un nuevo partido en la base de datos y automáticamente crea un scoreboard asociado.
 
         Args:
             match (MatchCreate): Datos del partido a crear.
@@ -55,9 +57,23 @@ class MatchService:
             HTTPException: Si ocurre un error durante la creación.
         """
         try:
+            # Crear el match
             match_data = match.model_dump(exclude_unset=True)
             match_data = self._convert_string_ids_to_objectid(match_data)
             doc = await self.repo.create(match_data)
+            
+            # Crear automáticamente un scoreboard para este match
+            scoreboard_data = {
+                "match_id": doc.id,
+                "status_game": ObjectId("6886f7a1bd86bb802c751b29"),
+                "score_local": 0,
+                "score_visitor": 0,
+                "time_restant": 90,
+                "is_final": False
+            }
+            await self.scoreboard_repo.create(scoreboard_data)
+            logger.info(f"Scoreboard created automatically for match {doc.id}")
+            
             return MatchResponse(
                 id=str(doc.id),
                 season_id=str(doc.season_id) if doc.season_id else None,
