@@ -1,12 +1,12 @@
 from fastapi import APIRouter, HTTPException, status
 from typing import List
 from app.models.catalog_item import CatalogItem
-from app.schemas.catalog_item_schema import CatalogItemBase
+from app.schemas.catalog_item_schema import CatalogItemBase, CatalogItemResponse
 from beanie import PydanticObjectId
 
 router = APIRouter(prefix="/api/v1/catalog_items", tags=["CatalogItems"])
 
-@router.post("/", response_model=CatalogItemBase, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=CatalogItemResponse, status_code=status.HTTP_201_CREATED)
 async def create_catalog_item(item: CatalogItemBase):
     """
     Crea un nuevo ítem de catálogo.
@@ -18,9 +18,9 @@ async def create_catalog_item(item: CatalogItemBase):
     """
     item_doc = CatalogItem(**item.dict())
     await item_doc.insert()
-    return CatalogItemBase(**item_doc.dict())
+    return CatalogItemResponse(**item_doc.dict())
 
-@router.get("/", response_model=List[CatalogItemBase])
+@router.get("/", response_model=List[CatalogItemResponse])
 async def list_catalog_items():
     """
     Obtiene la lista de todos los ítems de catálogo.
@@ -29,9 +29,9 @@ async def list_catalog_items():
         List[CatalogItemBase]: Lista de ítems de catálogo.
     """
     items = await CatalogItem.find_all().to_list()
-    return [CatalogItemBase(**i.dict()) for i in items]
+    return [CatalogItemResponse(**i.dict()) for i in items]
 
-@router.get("/{item_id}", response_model=CatalogItemBase)
+@router.get("/{item_id}", response_model=CatalogItemResponse)
 async def get_catalog_item(item_id: PydanticObjectId):
     """
     Obtiene un ítem de catálogo por su ID.
@@ -44,7 +44,7 @@ async def get_catalog_item(item_id: PydanticObjectId):
     item = await CatalogItem.get(item_id)
     if not item:
         raise HTTPException(status_code=404, detail="CatalogItem not found")
-    return CatalogItemBase(**item.dict())
+    return CatalogItemResponse(**item.dict())
 
 @router.delete("/{item_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_catalog_item(item_id: PydanticObjectId):

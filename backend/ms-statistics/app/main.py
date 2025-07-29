@@ -21,6 +21,7 @@ from app.api.endpoints.statistics_competence import router as statistic_competen
 from app.api.endpoints.statistic_individual import router as statistic_individual_router
 from app.api.endpoints.statistic_team import router as statistic_team_router
 from app.api.endpoints.statistic_season import router as statistic_season_router
+from app.api.endpoints.table_rating_competition import router as table_rating_competition_router
 
 app = FastAPI(title="Statistics Microservice", version="1.0.0")
 
@@ -103,3 +104,4 @@ app.include_router(statistic_competence_router)
 app.include_router(statistic_individual_router)
 app.include_router(statistic_team_router)
 app.include_router(statistic_season_router)
+app.include_router(table_rating_competition_router)
