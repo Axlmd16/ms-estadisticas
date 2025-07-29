@@ -331,4 +331,79 @@ class MatchService {
       throw Exception('Error de conexión: $e');
     }
   }
+
+  // ===== MÉTODOS PARA GESTIÓN DE EQUIPOS =====
+  
+  Future<List<dynamic>> getTeams() async {
+    try {
+      print('🔄 Obteniendo equipos');
+      
+      final response = await http.get(
+        Uri.parse('$baseUrl/teams/'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      print('📡 Respuesta recibida - Status Code: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('✅ Se obtuvieron ${data.length} equipos');
+        return data;
+      } else {
+        print('❌ Error del servidor: ${response.statusCode}');
+        throw Exception('Error del servidor: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('💥 Error en getTeams: $e');
+      throw Exception('Error de conexión: $e');
+    }
+  }
+
+  // ===== MÉTODOS PARA GESTIÓN DE MATCHES =====
+  
+  Future<Map<String, dynamic>> createMatch({
+    required String localTeamId,
+    required String visitorTeamId,
+    required String date,
+    String? seasonId,
+  }) async {
+    try {
+      print('🔄 Creando nuevo match');
+      
+      final body = {
+        'local_team_id': localTeamId,
+        'visitor_team_id': visitorTeamId,
+        'date': date,
+        if (seasonId != null) 'season_id': seasonId,
+      };
+      
+      print('📤 Body de la petición: $body');
+      
+      final response = await http.post(
+        Uri.parse('$baseUrl/matches/'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(body),
+      );
+
+      print('📡 Respuesta recibida - Status Code: ${response.statusCode}');
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = json.decode(response.body);
+        print('✅ Match creado exitosamente');
+        print('📋 Datos del match: $data');
+        return data;
+      } else {
+        print('❌ Error del servidor: ${response.statusCode}');
+        print('📄 Respuesta: ${response.body}');
+        throw Exception('Error del servidor: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('💥 Error en createMatch: $e');
+      throw Exception('Error de conexión: $e');
+    }
+  }
 }
