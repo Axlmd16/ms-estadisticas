@@ -275,26 +275,33 @@ import type { CompetitionWithTeams } from '../../../../../core/services/statisti
                             </mat-card-header>
                             <mat-card-content>
                                 <div *ngIf="tableRatings.length > 0; else noTable">
-                                    <table mat-table [dataSource]="tableRatings" class="standings-table">
+                                    <table mat-table [dataSource]="tableRatings" class="standings-table better-standings-table">
                                         <ng-container matColumnDef="position">
-                                            <th mat-header-cell *matHeaderCellDef>Pos.</th>
-                                            <td mat-cell *matCellDef="let element">{{ element.position }}</td>
+                                            <th mat-header-cell *matHeaderCellDef class="standings-header">Pos.</th>
+                                            <td mat-cell *matCellDef="let element" class="standings-pos">
+                                                <ng-container [ngSwitch]="element.position">
+                                                    <span *ngSwitchCase="1" class="medal gold">🥇</span>
+                                                    <span *ngSwitchCase="2" class="medal silver">🥈</span>
+                                                    <span *ngSwitchCase="3" class="medal bronze">🥉</span>
+                                                </ng-container>
+                                                {{ element.position }}
+                                            </td>
                                         </ng-container>
 
                                         <ng-container matColumnDef="team">
-                                            <th mat-header-cell *matHeaderCellDef>Equipo</th>
-                                            <td mat-cell *matCellDef="let element">{{ element.team?.name || 'N/A' }}</td>
+                                            <th mat-header-cell *matHeaderCellDef class="standings-header">Equipo</th>
+                                            <td mat-cell *matCellDef="let element" class="standings-team">
+                                                <span class="team-name">{{ element.team?.name || 'N/A' }}</span>
+                                            </td>
                                         </ng-container>
 
                                         <ng-container matColumnDef="points">
-                                            <th mat-header-cell *matHeaderCellDef>Pts</th>
-                                            <td mat-cell *matCellDef="let element">{{ element.points_total ?? 0 }}</td>
+                                            <th mat-header-cell *matHeaderCellDef class="standings-header">Pts</th>
+                                            <td mat-cell *matCellDef="let element" class="standings-points">{{ element.points_total ?? 0 }}</td>
                                         </ng-container>
 
-                                        <!-- Puedes agregar más columnas si tu backend las provee, por ejemplo partidos jugados, ganados, etc. -->
-
-                                        <tr mat-header-row *matHeaderRowDef="['position', 'team', 'points']"></tr>
-                                        <tr mat-row *matRowDef="let row; columns: ['position', 'team', 'points'];"></tr>
+                                        <tr mat-header-row *matHeaderRowDef="['position', 'team', 'points']" class="standings-header-row"></tr>
+                                        <tr mat-row *matRowDef="let row; columns: ['position', 'team', 'points'];" class="standings-row"></tr>
                                     </table>
                                 </div>
                                 <ng-template #noTable>
@@ -611,6 +618,77 @@ import type { CompetitionWithTeams } from '../../../../../core/services/statisti
             .standings-table {
                 width: 100%;
                 margin-top: 16px;
+                border-radius: 16px;
+                overflow: hidden;
+                box-shadow: 0 4px 16px rgba(67, 103, 255, 0.08);
+                background: #fff;
+            }
+
+            .better-standings-table th.standings-header {
+                background: #667eea;
+                color: #fff;
+                font-weight: 700;
+                font-size: 1.1rem;
+                border: none;
+                padding: 14px 0;
+                text-align: center;
+                vertical-align: middle;
+            }
+
+            .better-standings-table td {
+                font-size: 1.05rem;
+                border-bottom: 1px solid #e9ecef;
+                padding: 12px 0;
+                text-align: center;
+                background: #fff;
+            }
+
+            .better-standings-table tr.standings-row:nth-child(even) td {
+                background: #f8f9fa;
+            }
+
+            .standings-pos {
+                font-weight: bold;
+                color: #2c3e50;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+            }
+
+            .medal {
+                font-size: 1.2em;
+                margin-right: 2px;
+            }
+            .medal.gold {
+                color: #FFD700;
+            }
+            .medal.silver {
+                color: #C0C0C0;
+            }
+            .medal.bronze {
+                color: #CD7F32;
+            }
+
+            .standings-team .team-name {
+                font-weight: 600;
+                color: #3b3b3b;
+                font-size: 1.08rem;
+            }
+
+            .standings-points {
+                font-weight: 700;
+                color: #4facfe;
+                font-size: 1.15rem;
+            }
+
+            .standings-header-row {
+                border-radius: 16px 16px 0 0;
+            }
+
+            .standings-row:hover td {
+                background: #e3e9f7 !important;
+                transition: background 0.2s;
             }
 
             .teams-grid {
@@ -875,10 +953,8 @@ export class CompetenciaDetalleComponent implements OnInit {
                 next: (response: TableRatingWithTeams) => {
                     console.log('[BACKEND] Info de backend sobre tabla de posiciones:', response);
                     if (response && Array.isArray(response.positions) && response.positions.length > 0) {
-                        this.tableRatings = response.positions.map((pos, idx) => ({
-                            ...pos,
-                            position: idx + 1 // Si no viene la posición, la calculamos
-                        }));
+                        // Ordenar por el campo position que ya viene del backend
+                        this.tableRatings = response.positions.slice().sort((a, b) => (a.position ?? 999) - (b.position ?? 999));
                     } else {
                         this.tableRatings = [];
                     }
