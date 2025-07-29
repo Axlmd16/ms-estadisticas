@@ -53,6 +53,18 @@ async def update_event_match(event_id: PydanticObjectId, event: EventMatchUpdate
     """
     return await event_match_service.update_event_match(event_id, event)
 
+@router.get("/match/{match_id}", response_model=List[EventMatchResponse])
+async def get_events_by_match(match_id: str):
+    """
+    Obtiene todos los eventos de un partido específico ordenados por minuto descendente.
+
+    Args:
+        match_id (str): ID del partido.
+    Returns:
+        List[EventMatchResponse]: Lista de eventos del partido ordenados por minuto descendente.
+    """
+    return await event_match_service.get_events_by_match_str(match_id)
+
 @router.delete("/{event_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_event_match(event_id: PydanticObjectId):
     """

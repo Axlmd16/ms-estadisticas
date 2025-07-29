@@ -55,6 +55,36 @@ class EventMatchResponse(EventMatchBase):
             return str(v)
         return str(v) if v else None
 
+    @field_validator("type_event", mode="before")
+    @classmethod
+    def validate_type_event(cls, v):
+        """
+        Valida y transforma el ObjectId en un string antes de la serialización.
+        """
+        if isinstance(v, ObjectId):
+            return str(v)
+        return str(v) if v else None
+
+    @field_validator("athlete_id", mode="before")
+    @classmethod
+    def validate_athlete_id(cls, v):
+        """
+        Valida y transforma el ObjectId en un string antes de la serialización.
+        """
+        if isinstance(v, ObjectId):
+            return str(v)
+        return str(v) if v else None
+
+    @field_validator("match_id", mode="before")
+    @classmethod
+    def validate_match_id(cls, v):
+        """
+        Valida y transforma el ObjectId en un string antes de la serialización.
+        """
+        if isinstance(v, ObjectId):
+            return str(v)
+        return str(v) if v else None
+
     model_config = {
         "populate_by_name": True,
         "arbitrary_types_allowed": True,

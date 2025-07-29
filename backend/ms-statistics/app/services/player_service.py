@@ -168,6 +168,35 @@ class PlayerService:
             team_id=str(updated.team_id) if updated.team_id else None
         )
 
+    async def get_athletes_by_team(self, team_id: PydanticObjectId) -> list[AthleteResponse]:
+        """
+        Obtiene todos los atletas (jugadores) de un equipo específico.
+
+        Args:
+            team_id (PydanticObjectId): ID del equipo.
+        Returns:
+            list[AthleteResponse]: Lista de atletas del equipo.
+        Raises:
+            HTTPException: Si ocurre un error al obtener los atletas.
+        """
+        try:
+            # Buscar atletas por team_id
+            athletes = await self.repo.model.find({"team_id": ObjectId(team_id)}).to_list()
+            return [
+                AthleteResponse(
+                    id=str(athlete.id),
+                    name=athlete.name,
+                    position=athlete.position,
+                    team_id=str(athlete.team_id) if athlete.team_id else None
+                ) for athlete in athletes
+            ]
+        except Exception as e:
+            logger.error(f"Error getting athletes by team {team_id}: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error retrieving athletes for team"
+            )
+
     async def delete_athlete(self, athlete_id: PydanticObjectId) -> None:
         """
         Elimina un jugador por su ID.

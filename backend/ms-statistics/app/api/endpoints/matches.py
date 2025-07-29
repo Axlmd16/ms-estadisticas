@@ -50,6 +50,18 @@ async def get_match(match_id: PydanticObjectId):
     """
     return await match_service.get_match(match_id)
 
+@router.get("/{match_id}/with-teams", response_model=MatchWithTeamsResponse)
+async def get_match_with_teams(match_id: PydanticObjectId):
+    """
+    Obtiene la información de un partido específico con detalles de los equipos.
+
+    Args:
+        match_id (PydanticObjectId): ID del partido.
+    Returns:
+        MatchWithTeamsResponse: Información del partido con equipos.
+    """
+    return await match_service.get_match_with_teams(match_id)
+
 @router.put("/{match_id}", response_model=MatchResponse)
 async def update_match(match_id: PydanticObjectId, match: MatchUpdate):
     """

@@ -197,6 +197,76 @@ class EventMatchService:
             match_id=str(updated.match_id) if updated.match_id else None,
         )
 
+    async def get_events_by_match(self, match_id: PydanticObjectId) -> list[EventMatchResponse]:
+        """
+        Obtiene todos los eventos de un partido específico ordenados por minuto descendente.
+
+        Args:
+            match_id (PydanticObjectId): ID del partido.
+        Returns:
+            list[EventMatchResponse]: Lista de eventos del partido ordenados por minuto descendente.
+        Raises:
+            HTTPException: Si ocurre un error al obtener los eventos.
+        """
+        try:
+            logger.info(f"Getting events for match_id: {match_id}")
+            
+            # Buscar eventos por match_id
+            events = await self.repo.model.find({"match_id": match_id}).sort([("minute", -1)]).to_list()
+            
+            logger.info(f"Found {len(events)} events for match {match_id}")
+            
+            return [EventMatchResponse(**event.model_dump()) for event in events]
+            
+        except Exception as e:
+            logger.error(f"Error getting events by match {match_id}: {str(e)}")
+            logger.error(f"Exception type: {type(e)}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error retrieving events for match"
+            )
+
+    async def get_events_by_match_str(self, match_id: str) -> list[EventMatchResponse]:
+        """
+        Obtiene todos los eventos de un partido específico usando string ID.
+
+        Args:
+            match_id (str): ID del partido como string.
+        Returns:
+            list[EventMatchResponse]: Lista de eventos del partido ordenados por minuto descendente.
+        """
+        try:
+            logger.info(f"Getting events for match_id string: {match_id}")
+            
+            # Intentar buscar tanto como string como ObjectId
+            # Primero como string
+            logger.info(f"Searching for events with match_id as string: {match_id}")
+            events = await self.repo.model.find({"match_id": match_id}).sort([("minute", -1)]).to_list()
+            logger.info(f"Found {len(events)} events as string")
+            
+            # Si no encuentra como string, intentar como ObjectId
+            if not events:
+                try:
+                    logger.info(f"Trying with ObjectId conversion for: {match_id}")
+                    object_id = ObjectId(match_id)
+                    events = await self.repo.model.find({"match_id": object_id}).sort([("minute", -1)]).to_list()
+                    logger.info(f"Found {len(events)} events as ObjectId")
+                except Exception as ex:
+                    logger.warning(f"Failed to convert to ObjectId: {ex}")
+            
+            logger.info(f"Final result: Found {len(events)} events for match {match_id}")
+            
+            return [EventMatchResponse(**event.model_dump()) for event in events]
+            
+        except Exception as e:
+            logger.error(f"Error getting events by match string {match_id}: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error retrieving events for match"
+            )
+
     async def delete_event_match(self, event_id: PydanticObjectId) -> None:
         """
         Elimina un evento de partido por su ID.

@@ -53,6 +53,18 @@ async def update_athlete(athlete_id: PydanticObjectId, athlete: AthleteUpdate):
     """
     return await player_service.update_athlete(athlete_id, athlete)
 
+@router.get("/team/{team_id}", response_model=List[AthleteResponse])
+async def get_athletes_by_team(team_id: PydanticObjectId):
+    """
+    Obtiene todos los atletas (jugadores) de un equipo específico.
+
+    Args:
+        team_id (PydanticObjectId): ID del equipo.
+    Returns:
+        List[AthleteResponse]: Lista de atletas del equipo.
+    """
+    return await player_service.get_athletes_by_team(team_id)
+
 @router.delete("/{athlete_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_athlete(athlete_id: PydanticObjectId):
     """

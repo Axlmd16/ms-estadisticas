@@ -196,6 +196,64 @@ class MatchService:
             date=match.date
         )
 
+    async def get_match_with_teams(self, match_id: PydanticObjectId) -> MatchWithTeamsResponse:
+        """
+        Obtiene un partido por su ID con información completa de los equipos.
+
+        Args:
+            match_id (PydanticObjectId): ID del partido.
+        Returns:
+            MatchWithTeamsResponse: Partido con información de equipos.
+        Raises:
+            HTTPException: Si el partido no existe.
+        """
+        match = await self.repo.get_by_id(match_id)
+        if not match:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Match not found"
+            )
+        
+        try:
+            # Obtener información del equipo local
+            local_team = None
+            if match.local_team_id:
+                local_team_doc = await self.team_repo.get_by_id(match.local_team_id)
+                if local_team_doc:
+                    local_team = TeamInfo(
+                        id=str(local_team_doc.id),
+                        name=local_team_doc.name,
+                        description=local_team_doc.description,
+                        founded=local_team_doc.founded
+                    )
+            
+            # Obtener información del equipo visitante
+            visitor_team = None
+            if match.visitor_team_id:
+                visitor_team_doc = await self.team_repo.get_by_id(match.visitor_team_id)
+                if visitor_team_doc:
+                    visitor_team = TeamInfo(
+                        id=str(visitor_team_doc.id),
+                        name=visitor_team_doc.name,
+                        description=visitor_team_doc.description,
+                        founded=visitor_team_doc.founded
+                    )
+            
+            # Crear el match con información de equipos
+            return MatchWithTeamsResponse(
+                id=str(match.id),
+                season_id=str(match.season_id) if match.season_id else None,
+                local_team=local_team,
+                visitor_team=visitor_team,
+                date=match.date
+            )
+        except Exception as e:
+            logger.error(f"Error getting match with teams {match_id}: {str(e)}")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Error retrieving match with teams"
+            )
+
     async def update_match(self, match_id: PydanticObjectId, match: MatchUpdate) -> MatchResponse:
         """
         Actualiza los datos de un partido existente.

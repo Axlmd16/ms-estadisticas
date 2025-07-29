@@ -173,4 +173,162 @@ class MatchService {
       throw Exception('Error de conexión: $e');
     }
   }
+
+  // ===== MÉTODOS PARA EVENTOS =====
+  
+  // Obtener eventos por match
+  Future<List<dynamic>> getEventsByMatch(String matchId) async {
+    try {
+      print('🔄 Obteniendo eventos para match: $matchId');
+      
+      final response = await http.get(
+        Uri.parse('$baseUrl/event_matches/match/$matchId'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      print('📡 Respuesta recibida - Status Code: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('✅ Se obtuvieron ${data.length} eventos');
+        return data is List ? data : [];
+      } else {
+        print('❌ Error del servidor: ${response.statusCode}');
+        throw Exception('Error del servidor: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('💥 Error en getEventsByMatch: $e');
+      throw Exception('Error de conexión: $e');
+    }
+  }
+
+  // Obtener atletas por equipo
+  Future<List<dynamic>> getAthletesByTeam(String teamId) async {
+    try {
+      print('🔄 Obteniendo atletas para equipo: $teamId');
+      
+      final response = await http.get(
+        Uri.parse('$baseUrl/athletes/team/$teamId'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      print('📡 Respuesta recibida - Status Code: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('✅ Se obtuvieron ${data.length} atletas');
+        return data is List ? data : [];
+      } else {
+        print('❌ Error del servidor: ${response.statusCode}');
+        throw Exception('Error del servidor: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('💥 Error en getAthletesByTeam: $e');
+      throw Exception('Error de conexión: $e');
+    }
+  }
+
+  // Obtener match con equipos
+  Future<Map<String, dynamic>> getMatchWithTeams(String matchId) async {
+    try {
+      print('🔄 Obteniendo match con equipos: $matchId');
+      
+      final response = await http.get(
+        Uri.parse('$baseUrl/matches/$matchId/with-teams'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      print('📡 Respuesta recibida - Status Code: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('✅ Match con equipos obtenido exitosamente');
+        return data;
+      } else {
+        print('❌ Error del servidor: ${response.statusCode}');
+        throw Exception('Error del servidor: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('💥 Error en getMatchWithTeams: $e');
+      throw Exception('Error de conexión: $e');
+    }
+  }
+
+  // Obtener tipos de eventos del catálogo
+  Future<List<dynamic>> getCatalogItems() async {
+    try {
+      print('🔄 Obteniendo tipos de eventos del catálogo');
+      
+      final response = await http.get(
+        Uri.parse('$baseUrl/catalog_items/'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      );
+
+      print('📡 Respuesta recibida - Status Code: ${response.statusCode}');
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print('✅ Se obtuvieron ${data.length} tipos de eventos');
+        return data is List ? data : [];
+      } else {
+        print('❌ Error del servidor: ${response.statusCode}');
+        throw Exception('Error del servidor: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('💥 Error en getCatalogItems: $e');
+      throw Exception('Error de conexión: $e');
+    }
+  }
+
+  // Crear nuevo evento de partido
+  Future<Map<String, dynamic>> createEventMatch({
+    required String matchId,
+    required String athleteId,
+    required String typeEvent,
+    required double minute,
+    String description = '',
+  }) async {
+    try {
+      print('🔄 Creando nuevo evento para match: $matchId');
+      
+      final body = {
+        'match_id': matchId,
+        'athlete_id': athleteId,
+        'type_event': typeEvent,
+        'minute': minute,
+        'description': description,
+      };
+
+      final response = await http.post(
+        Uri.parse('$baseUrl/event_matches/'),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: json.encode(body),
+      );
+
+      print('📡 Respuesta recibida - Status Code: ${response.statusCode}');
+
+      if (response.statusCode == 201) {
+        final data = json.decode(response.body);
+        print('✅ Evento creado exitosamente');
+        return data;
+      } else {
+        print('❌ Error del servidor: ${response.statusCode}');
+        print('📄 Respuesta: ${response.body}');
+        throw Exception('Error del servidor: ${response.statusCode}');
+      }
+    } catch (e) {
+      print('💥 Error en createEventMatch: $e');
+      throw Exception('Error de conexión: $e');
+    }
+  }
 }
