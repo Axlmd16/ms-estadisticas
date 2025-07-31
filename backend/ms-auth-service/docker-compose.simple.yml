@@ -1,0 +1,29 @@
+version: '3.8'
+
+services:
+  ms-auth-service:
+    build: .
+    ports:
+      - "8011:8000"
+    environment:
+      - SECRET_KEY=django-insecure-your-secret-key-here-change-this-in-production
+      - DEBUG=True
+      - DATABASE_URL=sqlite:///app/db.sqlite3
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672//
+      - SENDER_EMAIL=noreply@sportboard.com
+      - FLOWER_BASIC_AUTH=admin:admin
+    volumes:
+      - ./app:/app
+    working_dir: /app
+    command: python manage.py runserver 0.0.0.0:8000
+    depends_on:
+      - rabbitmq
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest

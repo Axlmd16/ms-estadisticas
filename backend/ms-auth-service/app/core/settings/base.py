@@ -220,7 +220,7 @@ CELERY_ACCEPT_CONTENT = ['application/json']
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TASK_SERIALIZER = 'json'
 CELERY_BROKER_URL = config('RABBITMQ_URL')
-FLOWER_BASIC_AUTH = os.environ.get('FLOWER_BASIC_AUTH')
+FLOWER_BASIC_AUTH = config('FLOWER_BASIC_AUTH', default='admin:admin')
 EMAIL_FROM = config("SENDER_EMAIL")
 
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
@@ -263,4 +263,4 @@ SPECTACULAR_SETTINGS = {
     'OAUTH2_SCOPES': None,
 }
 
-MAX_LOGIN_ATTEMPT = config('MAX_LOGIN_ATTEMPT', cast=int)
+MAX_LOGIN_ATTEMPT = config('MAX_LOGIN_ATTEMPT', default=5, cast=int)

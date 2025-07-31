@@ -3,18 +3,17 @@ services:
         container_name: ms-auth-service
         build:
             context: ../../../backend/ms-auth-service
-            dockerfile: docker/prod/Dockerfile
+            dockerfile: docker/simple/Dockerfile
         environment:
-            - DEBUG=0
+            - DEBUG=1
             - SECRET_KEY=mysecret
-            - ENVIRONMENT=prod
+            - ENVIRONMENT=docker_dev
+            - DJANGO_SETTINGS_MODULE=core.settings.docker_dev
             - DATABASE_URL=postgresql://auth_user:auth_password@auth-database:5432/auth_db
             - RABBITMQ_URL=amqp://user:password@rabbitmq:5672
             - ALLOWED_HOSTS=localhost,127.0.0.1,ms-auth-service
             - MAX_LOGIN_ATTEMPT=3
             - SENDER_EMAIL=noreply@sportboard.com
-            - EMAIL_HOST_USER=user@example.com
-            - EMAIL_HOST_PASSWORD=password
         ports:
             - "8011:8011"
         depends_on:

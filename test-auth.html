@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SportBoard - Test Auth</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 4px;
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+        }
+        .success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h2 {
+            color: #555;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏆 SportBoard - Test de Autenticación</h1>
+        
+        <h2>📝 Registro de Usuario</h2>
+        <form id="registerForm">
+            <div class="form-group">
+                <label for="regUsername">Username:</label>
+                <input type="text" id="regUsername" required>
+            </div>
+            <div class="form-group">
+                <label for="regEmail">Email:</label>
+                <input type="email" id="regEmail" required>
+            </div>
+            <div class="form-group">
+                <label for="regFirstname">Nombre:</label>
+                <input type="text" id="regFirstname" required>
+            </div>
+            <div class="form-group">
+                <label for="regLastname">Apellido:</label>
+                <input type="text" id="regLastname" required>
+            </div>
+            <div class="form-group">
+                <label for="regPassword">Password:</label>
+                <input type="password" id="regPassword" required>
+            </div>
+            <button type="submit">Registrar Usuario</button>
+        </form>
+
+        <h2>🔐 Login de Usuario</h2>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="loginEmail">Email:</label>
+                <input type="email" id="loginEmail" required>
+            </div>
+            <div class="form-group">
+                <label for="loginPassword">Password:</label>
+                <input type="password" id="loginPassword" required>
+            </div>
+            <button type="submit">Iniciar Sesión</button>
+        </form>
+
+        <div id="result" class="result" style="display: none;"></div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/auth/api/v1/auth';
+
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const userData = {
+                username: document.getElementById('regUsername').value,
+                email: document.getElementById('regEmail').value,
+                firstname: document.getElementById('regFirstname').value,
+                lastname: document.getElementById('regLastname').value,
+                password: document.getElementById('regPassword').value
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/register/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                const data = await response.json();
+                showResult(data, response.ok);
+                
+                if (response.ok) {
+                    document.getElementById('registerForm').reset();
+                }
+            } catch (error) {
+                showResult({error: error.message}, false);
+            }
+        });
+
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const loginData = {
+                email: document.getElementById('loginEmail').value,
+                password: document.getElementById('loginPassword').value
+            };
+
+            try {
+                const response = await fetch(`${API_BASE}/login/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(loginData)
+                });
+
+                const data = await response.json();
+                showResult(data, response.ok);
+                
+                if (response.ok) {
+                    localStorage.setItem('access_token', data.access);
+                    localStorage.setItem('refresh_token', data.refresh);
+                    document.getElementById('loginForm').reset();
+                }
+            } catch (error) {
+                showResult({error: error.message}, false);
+            }
+        });
+
+        function showResult(data, isSuccess) {
+            const resultDiv = document.getElementById('result');
+            resultDiv.style.display = 'block';
+            resultDiv.className = `result ${isSuccess ? 'success' : 'error'}`;
+            resultDiv.innerHTML = `
+                <h3>${isSuccess ? '✅ Éxito!' : '❌ Error!'}</h3>
+                <pre>${JSON.stringify(data, null, 2)}</pre>
+            `;
+        }
+    </script>
+</body>
+</html>

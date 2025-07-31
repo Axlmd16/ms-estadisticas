@@ -97,6 +97,8 @@ plugins:
               - http://localhost:4200
               - http://localhost:65293
               - http://localhost:8002
+              - http://10.0.2.2:8000
+              - "*"  # Allow all origins for development
           methods:
               - GET
               - POST
@@ -111,6 +113,9 @@ plugins:
               - Content-Type
               - Origin
               - X-Requested-With
+              - Cache-Control
+              - Pragma
+              - Expires
           exposed_headers:
               - X-Auth-Token
           credentials: true

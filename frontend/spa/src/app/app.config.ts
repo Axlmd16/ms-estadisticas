@@ -11,6 +11,7 @@ import { MAT_SNACK_BAR_DEFAULT_OPTIONS } from '@angular/material/snack-bar';
 
 import { routes } from './app.routes';
 import { AuthInterceptor } from './core/interceptors/auth.interceptor';
+import { CacheInterceptor } from './core/interceptors/cache.interceptor';
 
 export const appConfig: ApplicationConfig = {
     providers: [
@@ -21,6 +22,7 @@ export const appConfig: ApplicationConfig = {
         provideHttpClient(withInterceptorsFromDi()),
         importProvidersFrom(HttpClientModule),
         { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true },
+        { provide: HTTP_INTERCEPTORS, useClass: CacheInterceptor, multi: true },
         { provide: MAT_SNACK_BAR_DEFAULT_OPTIONS, useValue: { duration: 3000 } }
     ],
 };

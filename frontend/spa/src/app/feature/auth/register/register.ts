@@ -45,6 +45,7 @@ export class RegisterComponent implements OnInit {
       firstname: ['', [Validators.required, Validators.minLength(2)]],
       lastname: ['', [Validators.required, Validators.minLength(2)]],
       email: ['', [Validators.required, Validators.email]],
+      phone_number: [''], // Campo opcional
       password: ['', [Validators.required, Validators.minLength(6)]],
       confirmPassword: ['', [Validators.required]]
     }, {
@@ -80,8 +81,8 @@ export class RegisterComponent implements OnInit {
       firstname: this.registerForm.value.firstname,
       lastname: this.registerForm.value.lastname,
       email: this.registerForm.value.email,
+      phone_number: this.registerForm.value.phone_number,
       password: this.registerForm.value.password
-      // No enviamos role, el backend asignará automáticamente "ESPECTATOR"
     };
 
     this.authService.register(userData).subscribe({

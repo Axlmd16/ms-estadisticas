@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: '/api',  // This should be configured in production to match your API deployment
+  apiUrl: 'http://localhost:8000',  // Kong API Gateway URL for production
 };
