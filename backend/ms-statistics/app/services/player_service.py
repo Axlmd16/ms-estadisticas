@@ -6,6 +6,7 @@ Incluye la lógica para crear, listar, obtener, actualizar y eliminar jugadores,
 
 # Servicio de jugadores
 import logging
+from datetime import datetime
 from beanie import PydanticObjectId
 from fastapi import HTTPException, status
 from bson import ObjectId
@@ -49,30 +50,36 @@ class PlayerService:
             # Crear el atleta
             doc = await self.repo.create(athlete_data)
             
-            # Auto-crear estadísticas individuales con valores en cero
+            # Auto-crear estadísticas individuales con valores en cero - solo eventos del juego
             stats_data = StatisticIndividualCreate(
                 description=f"Estadísticas iniciales para {doc.name}",
-                id_athlete=str(doc.id),
+                date_generation=datetime.now(),
+                athlete_id=str(doc.id),  # Usar athlete_id en lugar de id_athlete
+                value=0.0,  # Valor inicial
+                # Campos legacy
+                goal=0,
+                own_goal=0,
+                foul=0,
+                red_card=0,
+                yellow_card=0,
+                # Campos nuevos - solo eventos del juego
                 goals=0,
                 assists=0,
                 yellow_cards=0,
                 red_cards=0,
-                games_played=0,
                 fouls_committed=0,
                 fouls_received=0,
                 offsides=0,
-                saves=0,
-                passes_completed=0,
-                passes_attempted=0,
                 shots_on_target=0,
-                shots_off_target=0,
-                distance_covered=0.0,
-                top_speed=0.0,
-                average_speed=0.0,
-                time_played=0
+                shots_off_target=0
             )
             
-            await self.stats_repo.create(stats_data.model_dump(exclude_unset=True))
+            # Convertir athlete_id a ObjectId antes de crear
+            stats_dict = stats_data.model_dump(exclude_unset=True)
+            if "athlete_id" in stats_dict:
+                stats_dict["athlete_id"] = ObjectId(stats_dict["athlete_id"])
+            
+            await self.stats_repo.create(stats_dict)
             logger.info(f"Auto-created statistics for athlete {doc.name} (ID: {doc.id})")
             
             return AthleteResponse(
